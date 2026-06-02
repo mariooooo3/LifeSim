@@ -1,0 +1,358 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-calm: var(--calm);
+  --color-grow: var(--grow);
+  --color-warm: var(--warm);
+  --color-stress: var(--stress);
+
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Dark-first */
+:root {
+  --radius: 0.75rem;
+
+  --background: oklch(0.18 0.012 250);
+  --foreground: oklch(0.96 0.005 250);
+
+  --surface: oklch(0.22 0.014 250);
+  --surface-2: oklch(0.26 0.016 250);
+
+  --card: oklch(0.225 0.014 250);
+  --card-foreground: oklch(0.96 0.005 250);
+
+  --popover: oklch(0.22 0.014 250);
+  --popover-foreground: oklch(0.96 0.005 250);
+
+  --primary: oklch(0.78 0.09 230);
+  --primary-foreground: oklch(0.18 0.012 250);
+
+  --secondary: oklch(0.3 0.015 250);
+  --secondary-foreground: oklch(0.96 0.005 250);
+
+  --muted: oklch(0.28 0.012 250);
+  --muted-foreground: oklch(0.7 0.015 250);
+
+  --accent: oklch(0.32 0.02 250);
+  --accent-foreground: oklch(0.96 0.005 250);
+
+  --destructive: oklch(0.6 0.16 25);
+  --destructive-foreground: oklch(0.98 0.005 250);
+
+  --border: oklch(0.32 0.012 250 / 0.6);
+  --input: oklch(0.3 0.012 250 / 0.7);
+  --ring: oklch(0.7 0.08 230);
+
+  /* Systemic mood accents */
+  --calm: oklch(0.78 0.09 230);     /* soft blue */
+  --grow: oklch(0.78 0.10 160);     /* muted green */
+  --warm: oklch(0.82 0.12 70);      /* warm amber */
+  --stress: oklch(0.7 0.14 25);     /* soft red */
+}
+
+.dark {
+  /* same — app is dark-first */
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html, body {
+    background: radial-gradient(1200px 800px at 20% -10%, color-mix(in oklab, var(--calm) 14%, transparent), transparent 60%),
+                radial-gradient(900px 600px at 100% 0%, color-mix(in oklab, var(--grow) 8%, transparent), transparent 55%),
+                var(--background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .glass {
+    background: color-mix(in oklab, var(--surface) 70%, transparent);
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
+    border: 1px solid color-mix(in oklab, var(--foreground) 8%, transparent);
+  }
+  .glass-2 {
+    background: color-mix(in oklab, var(--surface-2) 60%, transparent);
+    backdrop-filter: blur(18px) saturate(120%);
+    border: 1px solid color-mix(in oklab, var(--foreground) 10%, transparent);
+  }
+  .hairline {
+    border: 1px solid color-mix(in oklab, var(--foreground) 8%, transparent);
+  }
+  .breathe {
+    animation: breathe 6s ease-in-out infinite;
+  }
+  .text-balance { text-wrap: balance; }
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.015); }
+}
+
+@keyframes feed-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-feed-in { animation: feed-in 0.5s ease-out; }
+
+@keyframes orbit-spin {
+  to { transform: rotate(360deg); }
+}
+.animate-orbit { animation: orbit-spin 60s linear infinite; }
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+.animate-pulse-soft { animation: pulse-soft 3s ease-in-out infinite; }
+
+/* ============================================================
+   LifeSim backdrop design-token system  (ls-*)
+   Shared by OnboardingBackground and DashboardBackground.
+   The "evening" values are the defaults; other times override
+   specific tokens via data-time attribute.
+   ============================================================ */
+
+:root {
+  /* Space / onboarding palette */
+  --ls-space:            #08071a;
+  --ls-space-glow:       rgba(86,73,184,0.35);
+  --ls-ring:             rgba(180,170,255,0.4);
+
+  /* Notification card tones */
+  --ls-beacon-bg:        rgba(20,16,50,0.55);
+  --ls-beacon-fg:        rgba(230,225,255,0.95);
+  --ls-beacon-border:    rgba(180,170,255,0.25);
+
+  /* Dashboard sky — defaults = evening/dusk */
+  --ls-sky-top:          #1a1640;
+  --ls-sky-mid:          #3a2a55;
+  --ls-sky-bottom:       #c47a55;
+  --ls-haze:             rgba(60,30,70,0.55);
+
+  /* Buildings */
+  --ls-bldg-far:         #1c1638;
+  --ls-bldg-mid:         #120e26;
+  --ls-bldg-near:        #06040f;
+
+  /* Windows */
+  --ls-win-far:          rgba(255,200,130,0.35);
+  --ls-win-mid:          rgba(255,210,140,0.85);
+  --ls-win-near:         rgba(255,220,150,1);
+
+  /* Atmosphere */
+  --ls-tint:             rgba(255,140,80,0.08);
+  --ls-stars-opacity:    0.5;
+
+  /* Celestial disc (sun / moon) */
+  --ls-celestial-bg:     radial-gradient(circle,#ffd9a0 0%,rgba(255,180,120,0.4) 60%,transparent 75%);
+  --ls-celestial-top:    18%;
+  --ls-celestial-right:  18%;
+  --ls-celestial-size:   120px;
+
+  /* Road / cars */
+  --ls-road-mid:         rgba(255,200,150,0.18);
+  --ls-road-near:        rgba(255,210,160,0.28);
+  --ls-road-close:       rgba(255,220,170,0.38);
+  --ls-road-line:        rgba(255,230,180,0.35);
+  --ls-car-body:         #0d0a1f;
+  --ls-headlight:        #fff4d6;
+  --ls-headlight-glow:   #ffe8a8;
+  --ls-taillight:        #ff4d4d;
+  --ls-taillight-glow:   #ff6666;
+}
+
+/* ---------- time-of-day overrides ---------- */
+
+.ls-dashboard-bg[data-time="morning"] {
+  --ls-sky-top:         #6ea3d6;
+  --ls-sky-mid:         #f3c79a;
+  --ls-sky-bottom:      #fde2c6;
+  --ls-haze:            rgba(255,220,190,0.65);
+  --ls-bldg-far:        #6e7aa0;
+  --ls-bldg-mid:        #3d4670;
+  --ls-bldg-near:       #1c1f3a;
+  --ls-win-far:         rgba(255,245,210,0.5);
+  --ls-win-mid:         rgba(255,245,210,0.6);
+  --ls-win-near:        rgba(255,245,210,0.75);
+  --ls-tint:            rgba(255,200,150,0.12);
+  --ls-stars-opacity:   0;
+  --ls-celestial-bg:    radial-gradient(circle,#fff4d6 0%,rgba(255,220,160,0.5) 60%,transparent 78%);
+  --ls-road-mid:        rgba(180,160,130,0.2);
+  --ls-road-near:       rgba(190,170,140,0.3);
+  --ls-road-close:      rgba(200,180,150,0.4);
+  --ls-road-line:       rgba(220,200,170,0.4);
+  --ls-car-body:        #1a1733;
+  --ls-headlight:       #fff8e0;
+  --ls-headlight-glow:  #ffebb0;
+  --ls-taillight:       #ff5a5a;
+  --ls-taillight-glow:  #ff7777;
+}
+
+.ls-dashboard-bg[data-time="noon"] {
+  --ls-sky-top:         #4a8fd6;
+  --ls-sky-mid:         #9bc8ee;
+  --ls-sky-bottom:      #d8eaf6;
+  --ls-haze:            rgba(200,220,240,0.55);
+  --ls-bldg-far:        #7c8aaa;
+  --ls-bldg-mid:        #4d567a;
+  --ls-bldg-near:       #232844;
+  --ls-win-far:         rgba(255,255,240,0.25);
+  --ls-win-mid:         rgba(255,255,240,0.35);
+  --ls-win-near:        rgba(255,255,240,0.55);
+  --ls-tint:            rgba(255,250,220,0.06);
+  --ls-stars-opacity:   0;
+  --ls-celestial-bg:    radial-gradient(circle,#ffffff 0%,rgba(255,245,200,0.55) 55%,transparent 75%);
+  --ls-celestial-top:   10%;
+  --ls-celestial-right: 50%;
+  --ls-road-mid:        rgba(160,170,190,0.18);
+  --ls-road-near:       rgba(170,180,200,0.28);
+  --ls-road-close:      rgba(180,190,210,0.38);
+  --ls-road-line:       rgba(200,210,230,0.4);
+  --ls-car-body:        #222540;
+  --ls-headlight:       #f0f0f0;
+  --ls-headlight-glow:  #e8e8e8;
+  --ls-taillight:       #ff4444;
+  --ls-taillight-glow:  #ff5555;
+}
+
+/* evening = the :root defaults above */
+.ls-dashboard-bg[data-time="evening"] { /* inherits defaults */ }
+
+.ls-dashboard-bg[data-time="night"] {
+  --ls-sky-top:         #05061e;
+  --ls-sky-mid:         #0d0a32;
+  --ls-sky-bottom:      #1a1240;
+  --ls-haze:            rgba(10,8,30,0.7);
+  --ls-bldg-far:        #0e0c24;
+  --ls-bldg-mid:        #060514;
+  --ls-bldg-near:       #020108;
+  --ls-win-far:         rgba(255,210,140,0.65);
+  --ls-win-mid:         rgba(255,220,150,0.95);
+  --ls-win-near:        rgba(255,230,160,1);
+  --ls-tint:            rgba(60,40,120,0.18);
+  --ls-stars-opacity:   0.9;
+  --ls-celestial-bg:    radial-gradient(circle,#e8ecff 0%,rgba(180,190,255,0.4) 55%,transparent 75%);
+  --ls-celestial-top:   12%;
+  --ls-celestial-right: 22%;
+  --ls-celestial-size:  90px;
+  --ls-road-mid:        rgba(80,70,120,0.15);
+  --ls-road-near:       rgba(90,80,130,0.22);
+  --ls-road-close:      rgba(100,90,140,0.3);
+  --ls-road-line:       rgba(120,110,160,0.3);
+  --ls-car-body:        #080614;
+  --ls-headlight:       #fff5d0;
+  --ls-headlight-glow:  #ffe8a0;
+  --ls-taillight:       #ff3333;
+  --ls-taillight-glow:  #ff4444;
+}
+
+/* ---------- shared utility classes ---------- */
+
+.ls-starfield,
+.ls-stars {
+  background-image:
+    radial-gradient(1px 1px at 10% 20%,#fff 50%,transparent 51%),
+    radial-gradient(1px 1px at 23% 70%,#fff 50%,transparent 51%),
+    radial-gradient(1px 1px at 35% 35%,#fff 50%,transparent 51%),
+    radial-gradient(1px 1px at 47% 85%,#d8d4ff 50%,transparent 51%),
+    radial-gradient(1px 1px at 60% 15%,#fff 50%,transparent 51%),
+    radial-gradient(1.2px 1.2px at 72% 50%,#fff 50%,transparent 51%),
+    radial-gradient(1px 1px at 85% 28%,#c8c0ff 50%,transparent 51%),
+    radial-gradient(1px 1px at 92% 65%,#fff 50%,transparent 51%),
+    radial-gradient(1px 1px at 5% 55%,#fff 50%,transparent 51%),
+    radial-gradient(1.4px 1.4px at 40% 12%,#fff5d6 50%,transparent 51%),
+    radial-gradient(1px 1px at 78% 78%,#fff 50%,transparent 51%),
+    radial-gradient(1px 1px at 15% 90%,#c8c0ff 50%,transparent 51%);
+  background-size: 100% 100%;
+}
+.ls-stars { opacity: var(--ls-stars-opacity); transition: opacity 2.5s ease; }
+
+.ls-celestial {
+  position: absolute;
+  top: var(--ls-celestial-top);
+  right: var(--ls-celestial-right);
+  width: var(--ls-celestial-size);
+  height: var(--ls-celestial-size);
+  background: var(--ls-celestial-bg);
+  border-radius: 9999px;
+  filter: blur(2px);
+  transition: all 2.5s ease;
+}
+
+@keyframes ls-spin     { to { transform: rotate(360deg); } }
+@keyframes ls-spin-rev { to { transform: rotate(-360deg); } }
+@keyframes ls-pulse-soft {
+  0%,100% { opacity: 0.55; transform: scale(1); }
+  50%     { opacity: 1;    transform: scale(1.4); }
+}
+@keyframes ls-float-soft {
+  0%,100% { transform: translate(-50%,-100%) translateY(0); }
+  50%     { transform: translate(-50%,-100%) translateY(-6px); }
+}
+@keyframes ls-drive-right {
+  from { transform: translateX(-10vw); }
+  to   { transform: translateX(110vw); }
+}
+@keyframes ls-drive-left {
+  from { transform: translateX(110vw); }
+  to   { transform: translateX(-10vw); }
+}
+@keyframes ls-window-flicker {
+  0%,100% { opacity: 1; }
+  40%     { opacity: 0.25; }
+  60%     { opacity: 0.9; }
+  80%     { opacity: 0.4; }
+}
+
+.ls-spin-slow   { animation: ls-spin     120s linear        infinite; transform-origin: center; }
+.ls-spin-reverse{ animation: ls-spin-rev  90s linear        infinite; transform-origin: center; }
+.ls-pulse       { animation: ls-pulse-soft 3s ease-in-out   infinite; transform-origin: center; transform-box: fill-box; }
+.ls-float       { animation: ls-float-soft 5s ease-in-out   infinite; animation-fill-mode: backwards; }
+.ls-drive-right { animation: ls-drive-right linear          infinite; }
+.ls-drive-left  { animation: ls-drive-left  linear          infinite; }
+.ls-window      { animation: ls-window-flicker ease-in-out  infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ls-spin-slow, .ls-spin-reverse, .ls-pulse, .ls-float,
+  .ls-drive-right, .ls-drive-left, .ls-window { animation: none !important; }
+}
