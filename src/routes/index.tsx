@@ -110,7 +110,7 @@ function Onboarding() {
             className="mx-auto mb-4 h-36 w-36 drop-shadow-[0_0_24px_rgba(120,180,255,0.4)]"
             draggable={false}
           />
-          <h1 className="text-balance text-3xl font-semibold tracking-tight text-foreground drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)] md:text-4xl">
+          <h1 className="text-balance font-display text-4xl font-semibold tracking-tight text-foreground drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)] md:text-5xl">
             The world is already moving
           </h1>
           <p className="mt-3 text-balance text-sm font-medium italic leading-relaxed text-foreground/90">

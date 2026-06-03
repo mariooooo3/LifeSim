@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { callLLM, hasLLM } from "./callLLM";
 
 const NpcSummarySchema = z.object({
   id: z.string(),
@@ -31,8 +32,7 @@ export const generateEndSummary = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }): Promise<Record<string, string>> => {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) return buildFallback(data);
+    if (!hasLLM()) return buildFallback(data);
 
     const npcLines = data.npcs
       .map(
@@ -58,25 +58,12 @@ export const generateEndSummary = createServerFn({ method: "POST" })
       npcLines +
       (playerLine ? "\n" + playerLine : "");
 
+    const text = await callLLM(prompt, 400);
+    if (!text) return buildFallback(data);
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) return buildFallback(data);
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 400,
-          messages: [{ role: "user", content: prompt }],
-        }),
-      });
-      if (!res.ok) return buildFallback(data);
-      const json = await res.json() as { content?: { text?: string }[] };
-      const text = json.content?.[0]?.text ?? "";
-      const match = text.match(/\{[\s\S]*\}/);
-      return match ? (JSON.parse(match[0]) as Record<string, string>) : buildFallback(data);
+      return JSON.parse(match[0]) as Record<string, string>;
     } catch {
       return buildFallback(data);
     }

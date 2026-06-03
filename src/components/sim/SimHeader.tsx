@@ -63,8 +63,8 @@ export function SimHeader({
           <span className="absolute inset-0 rounded-full ring-1 ring-foreground/10" />
         </div>
         <div className="leading-tight">
-          <div className="text-sm font-medium text-foreground">{world}</div>
-          <div className="max-w-[22ch] truncate text-[10px] text-muted-foreground/70">
+          <div className="font-display text-base font-semibold tracking-tight text-foreground">{world}</div>
+          <div className="max-w-[24ch] truncate text-[10px] italic text-muted-foreground/70">
             {computeWorldMood(worldPressure)}
           </div>
         </div>
@@ -80,7 +80,7 @@ export function SimHeader({
         <Meta label="Day" value={`Day ${day}`} />
         <Meta label="Phase" value={phaseLabel} />
         <div className="leading-tight">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Pressure</div>
+          <div className="label">Pressure</div>
           <div className="flex items-center gap-1.5 text-sm tabular-nums" style={{ color: pressureColor }}>
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: pressureColor }} />
             {pressurePct}%
@@ -94,7 +94,7 @@ export function SimHeader({
           style={{ background: "var(--warm)", opacity: isRunning ? 1 : 0.3 }}
         />
         <div className="min-w-0 leading-tight">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Event</div>
+          <div className="label">Event</div>
           <div className="max-w-[38ch] truncate text-sm text-foreground/90">{worldEvent}</div>
         </div>
 
@@ -145,7 +145,7 @@ export function SimHeader({
 function Meta({ label, value }: { label: string; value: string }) {
   return (
     <div className="leading-tight">
-      <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{label}</div>
+      <div className="label">{label}</div>
       <div className="text-sm text-foreground/90">{value}</div>
     </div>
   );

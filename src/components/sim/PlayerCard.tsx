@@ -36,7 +36,7 @@ export function PlayerCard({ player, state }: Props) {
             {initials}
           </div>
           <div className="min-w-0">
-            <div className="truncate font-medium text-foreground">{player.name}</div>
+            <div className="truncate font-display text-lg font-semibold tracking-tight text-foreground">{player.name}</div>
             <div className="text-[11px] text-muted-foreground">
               {player.age} yrs · {player.gender}
             </div>
@@ -44,7 +44,7 @@ export function PlayerCard({ player, state }: Props) {
         </div>
 
         <div className="rounded-lg border border-foreground/8 bg-foreground/[0.03] px-3 py-2">
-          <div className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground mb-0.5">Career</div>
+          <div className="label mb-0.5">Career</div>
           <div className="text-[13px] font-medium text-foreground leading-snug">
             {player.professionTitle || player.archetype}
           </div>
@@ -61,7 +61,7 @@ export function PlayerCard({ player, state }: Props) {
       {/* Stats */}
       {state && (
         <div className="glass rounded-2xl p-4 space-y-3">
-          <div className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Your stats</div>
+          <div className="label">Your stats</div>
           {STAT_CONFIG.map(({ key, label, color }) => {
             const val = state[key];
             return (

@@ -1,4 +1,4 @@
-import type { NPC } from "@/lib/simulation/types";
+import type { NPC, HiddenTrait } from "@/lib/simulation/types";
 import type { DayPhase } from "@/lib/simulation/constants";
 import { toSimPhase } from "@/lib/simulation/constants";
 
@@ -31,8 +31,24 @@ export interface Situation {
   moneyBand: MoneyBand;
   energyBand: EnergyBand;
   mood: string;
-  hasOpportunity: boolean;
+  // Character + narrative colour — used to make each NPC's line distinct.
+  trait: HiddenTrait;
+  traitPhrase: string;
+  topMemory: string | null;        // text of the most defining memory
+  topMemoryType: string;           // "none" | MemoryType (in key for freshness)
+  opportunityTitle: string | null;
+  opportunityType: string;         // "none" | OpportunityType (in key)
 }
+
+// Short human phrasings for the hidden trait — fed to the LLM and used in the
+// rule-based fallback so personality actually shows in the narration.
+export const TRAIT_PHRASE: Record<HiddenTrait, string> = {
+  fearOfFailure:   "quietly afraid of falling short",
+  jealous:         "prone to measuring themselves against others",
+  insecure:        "second-guessing their own decisions",
+  riskSeeking:     "drawn to the edge of the unknown",
+  approvalSeeking: "still waiting to feel it's enough",
+};
 
 function stressBand(s: number): StressBand {
   if (s >= 78) return "crisis";
@@ -60,10 +76,14 @@ export function situationOf(npc: NPC, phase: DayPhase): Situation {
   const sBand = stressBand(npc.stress);
   const mBand = moneyBand(npc.money);
   const eBand = energyBand(npc.needs.energy);
-  const hasOpportunity = !!npc.activeOpportunity && !npc.activeOpportunity.resolved;
 
-  // The key intentionally omits names/numbers — only the discrete bands, so
-  // similar moments share a bucket.
+  const opp = npc.activeOpportunity && !npc.activeOpportunity.resolved ? npc.activeOpportunity : null;
+  // memories are kept sorted by impact (highest first) in the sim tick.
+  const mem = npc.memories.length > 0 ? npc.memories[0] : null;
+
+  // The key omits names/numbers — only discrete bands + the trait-stable role,
+  // plus opportunity/memory *type* so a cached line refreshes when the NPC's
+  // narrative state changes (no stale memory references on reuse).
   const key = [
     npc.role,
     npc.currentAction,
@@ -72,7 +92,8 @@ export function situationOf(npc: NPC, phase: DayPhase): Situation {
     mBand,
     eBand,
     npc.mood,
-    hasOpportunity ? "opp" : "_",
+    opp ? opp.type : "_",
+    mem ? mem.type : "_",
   ].join("|");
 
   return {
@@ -85,7 +106,12 @@ export function situationOf(npc: NPC, phase: DayPhase): Situation {
     moneyBand: mBand,
     energyBand: eBand,
     mood: npc.mood,
-    hasOpportunity,
+    trait: npc.personality.hiddenTrait,
+    traitPhrase: TRAIT_PHRASE[npc.personality.hiddenTrait],
+    topMemory: mem ? mem.text : null,
+    topMemoryType: mem ? mem.type : "none",
+    opportunityTitle: opp ? opp.title : null,
+    opportunityType: opp ? opp.type : "none",
   };
 }
 
@@ -203,7 +229,7 @@ function stateLines(sit: Situation): string[] {
       "It shows in small ways — shorter answers, longer pauses.",
       "Not breaking, but not resting either.",
     ];
-  if (sit.hasOpportunity)
+  if (sit.opportunityType !== "none")
     return [
       "There's a decision on the table, and the window is narrowing.",
       "Something could change here, if they reach for it.",
@@ -229,15 +255,37 @@ function stateLines(sit: Situation): string[] {
   ];
 }
 
+// Short personality/memory tail so the fallback also feels individual.
+function memoryClause(type: string): string | null {
+  switch (type) {
+    case "success":          return "still buoyed by a recent win";
+    case "conflict":         return "still shaking off a recent conflict";
+    case "financialStress":  return "money worries lingering underneath";
+    case "missedOpportunity":return "a missed chance still nagging";
+    case "gotHelp":          return "quietly grateful for help received";
+    default:                 return null;
+  }
+}
+
+function cap(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 export function fallbackVariants(sit: Situation, count: number): string[] {
   const actions = actionLines(sit);
   const states = stateLines(sit);
+  const mem = memoryClause(sit.topMemoryType);
   const seed = hashId(sit.key);
   const out: string[] = [];
   for (let i = 0; i < count; i++) {
     const a = actions[(seed + i) % actions.length];
-    const s = states[(seed + i) % states.length];
-    out.push(`${a} ${s}`);
+    // Tail rotates between recent memory, the personality trait, and mood/state
+    // — keeps each line to ~2 sentences while showing who this person is.
+    let tail: string;
+    if (mem) tail = `${cap(mem)}.`;
+    else if ((seed + i) % 3 === 0) tail = `Still ${sit.traitPhrase}.`;
+    else tail = states[(seed + i) % states.length];
+    out.push(`${a} ${tail}`);
   }
   return out;
 }

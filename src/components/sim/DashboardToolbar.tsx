@@ -22,8 +22,8 @@ export function DashboardToolbar({
   return (
     <div className="mb-4 flex items-end justify-between gap-4">
       <div>
-        <h2 className="text-lg font-medium tracking-tight text-foreground">{cityName}</h2>
-        <p className="text-xs text-muted-foreground">
+        <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">{cityName}</h2>
+        <p className="mt-0.5 text-xs text-muted-foreground">
           {filter === "all"
             ? `${totalNpcs} lives in motion · Day ${currentDay}`
             : `${visibleNpcs} of ${totalNpcs} ${

@@ -46,7 +46,7 @@ export function EventFeed({
       <div className="border-b border-foreground/8 px-4 py-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-medium text-foreground">Life in {cityName}</h2>
+            <h2 className="font-display text-base font-semibold tracking-tight text-foreground">Life in {cityName}</h2>
             <p className="text-[11px] text-muted-foreground">
               {currentDay != null && currentPhase ? `Day ${currentDay} · ${currentPhase}` : "Everyone keeps moving"}
             </p>
@@ -78,7 +78,7 @@ export function EventFeed({
             />
             <div className="min-w-0 flex-1">
               <p className="text-[13px] leading-snug text-foreground/85">{event.text}</p>
-              <p className="mt-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+              <p className="label mt-0.5">
                 {buildMetaLine(event)}
               </p>
             </div>

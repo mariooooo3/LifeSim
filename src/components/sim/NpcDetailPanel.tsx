@@ -74,7 +74,7 @@ export function NpcDetailPanel({ npc, allNpcs = [], day = 1, onClose }: Props) {
           <div className="flex items-center gap-3">
             <Avatar initials={npc.initials} hue={npc.hue} size={56} ring />
             <div>
-              <h2 className="text-lg font-medium tracking-tight text-foreground">{npc.name}</h2>
+              <h2 className="font-display text-2xl font-semibold tracking-tight text-foreground">{npc.name}</h2>
               <p className="text-xs text-muted-foreground">{npc.role} · Age {npc.age}</p>
               <div className="mt-1.5"><MoodDot mood={npc.mood} withLabel /></div>
             </div>
@@ -89,7 +89,7 @@ export function NpcDetailPanel({ npc, allNpcs = [], day = 1, onClose }: Props) {
 
         <Section title="Right Now">
           {narrationText ? (
-            <p className="text-[13px] leading-relaxed text-foreground/85 text-balance">
+            <p className="text-[14px] leading-relaxed text-foreground/90 text-balance">
               {narrationText}
             </p>
           ) : isPhasePending ? (
@@ -97,7 +97,7 @@ export function NpcDetailPanel({ npc, allNpcs = [], day = 1, onClose }: Props) {
               Generating story for this moment…
             </p>
           ) : (
-            <p className="text-[13px] leading-relaxed text-foreground/85 text-balance">
+            <p className="text-[14px] leading-relaxed text-foreground/90 text-balance">
               {narrateRightNow(npc, day)}
             </p>
           )}
@@ -124,7 +124,7 @@ export function NpcDetailPanel({ npc, allNpcs = [], day = 1, onClose }: Props) {
             <div className="hairline rounded-lg bg-foreground/[0.03] px-3 py-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-[13px] font-medium text-foreground">{npc.activeOpportunity!.title}</span>
-                <span className="text-[10px] uppercase tracking-wider text-[var(--warm)]">Pending</span>
+                <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--warm)]">Pending</span>
               </div>
               <p className="mt-1 text-[12px] text-muted-foreground">{npc.activeOpportunity!.description}</p>
             </div>
@@ -177,7 +177,7 @@ export function NpcDetailPanel({ npc, allNpcs = [], day = 1, onClose }: Props) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mt-6">
-      <h3 className="mb-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{title}</h3>
+      <h3 className="label mb-2">{title}</h3>
       {children}
     </div>
   );

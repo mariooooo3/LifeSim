@@ -34,8 +34,8 @@ export function EndSummaryOverlay({
       {/* Header */}
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-foreground/10 bg-background/90 px-6 py-4 backdrop-blur-sm">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Week complete</div>
-          <h1 className="text-xl font-medium tracking-tight text-foreground">
+          <div className="label">Week complete</div>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">
             7 days in {cityName}
           </h1>
         </div>
@@ -75,7 +75,7 @@ export function EndSummaryOverlay({
                   {player.name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-foreground">{player.name}</div>
+                  <div className="font-display text-lg font-semibold tracking-tight text-foreground">{player.name}</div>
                   <div className="text-[11px] text-muted-foreground mb-2">
                     {player.professionTitle || player.archetype}
                   </div>
@@ -108,7 +108,7 @@ export function EndSummaryOverlay({
                   <Avatar initials={npc.initials} hue={npc.hue} size={40} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium text-[13px] text-foreground">{npc.name}</span>
+                      <span className="font-display text-[15px] font-semibold tracking-tight text-foreground">{npc.name}</span>
                       <span
                         className="shrink-0 text-[10px] tabular-nums"
                         style={{ color: stressTone(npc.stress) }}
@@ -135,16 +135,16 @@ export function EndSummaryOverlay({
 
         {/* Scalability note — addresses the task requirement */}
         <div className="rounded-xl border border-foreground/8 bg-foreground/[0.02] px-5 py-4">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-2">
-            How this scales to hundreds of NPCs
-          </div>
+          <div className="label mb-2">How this scales to hundreds of NPCs</div>
           <p className="text-[12px] leading-relaxed text-foreground/70">
-            The simulation engine runs entirely in-browser — no LLM needed per tick. Each NPC decision
-            uses a utility-AI scoring function (~0ms). LLM calls are batched: one request per phase
-            covers all clicked NPCs, cached by <code className="text-[11px]">(npcId, day, phase)</code>.
-            At 500 NPCs, the end-of-week summary stays a single call by sampling the 10 most
-            statistically interesting NPCs (highest stress delta, most missed opportunities, largest
-            relationship shift) and generating a world-level narrative for the rest.
+            The simulation runs entirely in-browser — no LLM per tick; every NPC decision is a
+            utility-AI score (~0ms). The LLM is a thin, cached <em>presentation</em> layer: opening a
+            panel makes one batched call that narrates the whole visible cast, and narration is cached
+            by <code className="font-mono text-[11px]">situation</code> — role + action + time + coarse
+            stress/money/energy bands — not by NPC identity. Identical situations (across NPCs, time,
+            and runs) reuse the cache for zero tokens, so cost scales with the number of <em>distinct
+            situations</em> (which saturates), not with the number of NPCs. At 500 NPCs you narrate
+            only the ~15 on screen; the rest stay alive purely through the deterministic sim.
           </p>
         </div>
       </div>
@@ -154,7 +154,7 @@ export function EndSummaryOverlay({
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mb-3 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+    <div className="label mb-3">
       {children}
     </div>
   );

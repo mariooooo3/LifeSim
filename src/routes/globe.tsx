@@ -84,12 +84,17 @@ function GlobePage() {
   return (
     <main className="relative min-h-screen overflow-hidden">
       <div className="fixed inset-0 z-0" style={{ background: "#05060d" }}>
-        <CinematicGlobe
-          pins={pins}
-          selectedId={globeSelectedId}
-          onSelect={handleSelect}
-          className="absolute inset-0"
-        />
+        {/* Nudge the globe a touch lower; only the canvas is translated so
+            raycasting/click mapping stays correct (coords are relative to the
+            canvas rect). The vignette + background fill stay full-screen. */}
+        <div className="absolute inset-0" style={{ transform: "translateY(64px)" }}>
+          <CinematicGlobe
+            pins={pins}
+            selectedId={globeSelectedId}
+            onSelect={handleSelect}
+            className="absolute inset-0"
+          />
+        </div>
         <div
           className="pointer-events-none absolute inset-0"
           style={{ background: "radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.55) 100%)" }}
@@ -98,8 +103,8 @@ function GlobePage() {
 
       <div className="pointer-events-none relative z-10 flex min-h-screen flex-col">
         <div className="px-6 pt-10 text-center">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Step 2 · Origin</p>
-          <h1 className="mt-2 text-3xl font-medium tracking-tight text-foreground">
+          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Step 2 · Origin</p>
+          <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight text-foreground">
             Where does your story begin?
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">

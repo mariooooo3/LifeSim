@@ -54,7 +54,9 @@ export async function fetchNarrationVariants({
           moneyBand: s.moneyBand,
           energyBand: s.energyBand,
           mood: s.mood,
-          hasOpportunity: s.hasOpportunity,
+          traitPhrase: s.traitPhrase,
+          topMemory: s.topMemory,
+          opportunityTitle: s.opportunityTitle,
         })),
       },
     });

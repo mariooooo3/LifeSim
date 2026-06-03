@@ -73,7 +73,7 @@ export function NpcCard({ npc, onClick, active = false }: NpcCardProps) {
         <Avatar initials={npc.initials} hue={npc.hue} size={42} ring />
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="truncate text-sm font-medium text-foreground">{npc.name}</h3>
+            <h3 className="truncate font-display text-[15px] font-semibold tracking-tight text-foreground">{npc.name}</h3>
             <MoodDot mood={npc.mood} />
           </div>
           <p className="truncate text-xs text-muted-foreground">{npc.role}</p>
@@ -81,7 +81,7 @@ export function NpcCard({ npc, onClick, active = false }: NpcCardProps) {
       </div>
 
       <div className="space-y-1">
-        <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Right now</p>
+        <p className="label">Right now</p>
         <p className="text-sm text-foreground/90">
           {ACTION_LABELS[npc.currentAction]}
           <span className="ml-1.5 text-muted-foreground/55">· {npc.location}</span>
@@ -102,7 +102,7 @@ export function NpcCard({ npc, onClick, active = false }: NpcCardProps) {
           {hints.map((hint) => (
             <span
               key={hint}
-              className="rounded-full border border-foreground/10 bg-foreground/[0.03] px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-muted-foreground"
+              className="rounded-full border border-foreground/10 bg-foreground/[0.03] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground"
             >
               {hint}
             </span>

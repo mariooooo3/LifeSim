@@ -161,7 +161,7 @@ function SelectedCityCard({ city, onBegin, onClear }: SelectedCityCardProps) {
             <div className="text-[10px] text-muted-foreground/70">{todLabel}</div>
           </div>
         </div>
-        <h2 className="mt-3 text-2xl font-medium tracking-tight text-foreground">{city.name}</h2>
+        <h2 className="mt-3 font-display text-2xl font-semibold tracking-tight text-foreground">{city.name}</h2>
         <p className="mt-0.5 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
           {city.country}
           {" · "}
