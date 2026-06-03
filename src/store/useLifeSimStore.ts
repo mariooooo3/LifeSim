@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import type { NPC, NarrationCache, NarrationKey } from "@/lib/simulation/types";
-import { makeNarrationKey } from "@/lib/simulation/types";
-import { narrateNPCsForPhase } from "@/lib/llm/narrateNPCs";
+import type { NPC } from "@/lib/simulation/types";
+import { fetchNarrationVariants } from "@/lib/llm/narrateNPCs";
+import { situationOf, type Situation } from "@/lib/llm/situation";
 import type { WorldSeed } from "@/lib/simulation/worldSeed";
 import type { DayPhase } from "@/lib/simulation/constants";
 import type { SimEvent } from "@/lib/simulation/eventBuilder";
@@ -17,7 +17,8 @@ import { generateEndSummary } from "@/lib/api/endSummary.functions";
 import { buildWorldSeed } from "@/lib/simulation/worldSeed";
 import { generateNPCs } from "@/lib/simulation/npcFactory";
 import { simulateTick } from "@/lib/simulation/tick";
-import { getStorytellerEventForDay, clampPressure, midDayWorldHint } from "@/lib/simulation/storyteller";
+import { buildWorldEventSchedule, eventForDay, clampPressure, midDayWorldHint } from "@/lib/simulation/storyteller";
+import type { WorldEvent } from "@/lib/simulation/storyteller";
 import { computeWorldPressureProfile } from "@/lib/simulation/world/worldProfiles";
 import { regions } from "@/lib/sim-data";
 import { getCityById } from "@/lib/cities";
@@ -75,6 +76,32 @@ function tickPlayerState(prev: PlayerState, phase: string, worldPressure: number
   };
 }
 
+// ---------------------------------------------------------------------------
+// Narration bucket persistence — situation-key → variant pool. Persisting it
+// means a refresh (or a returning player) reuses already-paid narrations: the
+// warm-up cost is paid once, then clicks are free.
+
+const BUCKETS_STORAGE_KEY = "lifesim.narrationBuckets";
+
+function loadBuckets(): Record<string, string[]> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(BUCKETS_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, string[]>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveBuckets(buckets: Record<string, string[]>): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(BUCKETS_STORAGE_KEY, JSON.stringify(buckets));
+  } catch {
+    /* ignore quota / serialization errors */
+  }
+}
+
 interface LifeSimState {
   player: PlayerProfile | null;
   playerState: PlayerState | null;
@@ -91,11 +118,12 @@ interface LifeSimState {
   npcs: NPC[];
   worldPressure: number;
   worldEvent: string;
+  worldEventSchedule: WorldEvent[];
   feed: SimEvent[];
   selectedNpcId: string | null;
 
-  narrationCache: NarrationCache;
-  pendingNarrationPhase: { day: number; phase: DayPhase } | null;
+  narrationBuckets: Record<string, string[]>;   // situationKey → variant pool
+  pendingKeys: string[];                          // situation keys being fetched
 
   runEnded: boolean;
   endSummary: Record<string, string> | null;
@@ -104,7 +132,7 @@ interface LifeSimState {
   _timerHandle: ReturnType<typeof setInterval> | null;
 
   setPlayer: (player: PlayerProfile) => void;
-  generateNarrationsForCurrentPhase: () => Promise<void>;
+  narrateCurrentCast: () => Promise<void>;
   triggerEndSummary: () => Promise<void>;
   initWorld: (regionId: string, lat: number, lng: number, worldName: string) => void;
   startSimulation: () => void;
@@ -130,10 +158,11 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
   npcs: [],
   worldPressure: 0.2,
   worldEvent: "The world begins to stir.",
+  worldEventSchedule: [],
   feed: [],
   selectedNpcId: null,
-  narrationCache: {} as NarrationCache,
-  pendingNarrationPhase: null,
+  narrationBuckets: loadBuckets(),
+  pendingKeys: [],
   _timerHandle: null,
 
   setPlayer: (player) => set({
@@ -186,6 +215,7 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
     const runSeed = (Date.now() ^ (Math.random() * 0xffffffff | 0)) >>> 0;
     const worldSeed = buildWorldSeed(regionId, lat, lng, runSeed);
     const initialPressure = computeWorldPressureProfile(worldSeed).pressure;
+    const worldEventSchedule = buildWorldEventSchedule(worldSeed, DAYS_PER_WEEK);
     const rawNpcs = generateNPCs(worldSeed);
 
     // Tick zero: run one pass immediately so NPCs are active from the start
@@ -206,6 +236,7 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
     set({
       worldSeed,
       worldName,
+      worldEventSchedule,
       npcs: warmNpcs,
       day: 1,
       phaseIndex: 1,   // already consumed phase 0
@@ -258,7 +289,7 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
   },
 
   tick: () => {
-    const { npcs, day, phaseIndex, worldPressure, worldSeed, feed, tickCount, player, playerState, runEnded } = get();
+    const { npcs, day, phaseIndex, worldPressure, worldSeed, worldEventSchedule, feed, tickCount, player, playerState, runEnded } = get();
     if (!worldSeed || runEnded) return;
 
     const phase = DAY_PHASES[phaseIndex] as DayPhase;
@@ -266,7 +297,7 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
     // Determine world effects for this tick (only on first phase of new day)
     let worldEffects = undefined;
     if (phaseIndex === 0) {
-      const storyEvent = getStorytellerEventForDay(day);
+      const storyEvent = eventForDay(worldEventSchedule, day);
       worldEffects = storyEvent?.npcEffects;
     }
 
@@ -288,7 +319,7 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
 
     // Apply storyteller at end of day (transitioning to next day)
     if (nextPhaseIndex === 0) {
-      const storyEvent = getStorytellerEventForDay(nextDay);
+      const storyEvent = eventForDay(worldEventSchedule, nextDay);
       if (storyEvent) {
         newPressure = clampPressure(worldPressure + storyEvent.pressureDelta);
         newWorldEvent = storyEvent.feedText;
@@ -303,7 +334,7 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
     }
 
     // Mid-day narrative hints (delegated to storyteller)
-    const hint = midDayWorldHint(day, phase);
+    const hint = midDayWorldHint(day, phase, worldSeed);
     if (hint) {
       events.push({ id: `hint-${day}-${tickCount}`, kind: "world" as const, text: hint, day, phase });
     }
@@ -347,39 +378,46 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
     });
   },
 
-  generateNarrationsForCurrentPhase: async () => {
-    const { day, phaseIndex, npcs, worldSeed, narrationCache, pendingNarrationPhase } = get();
+  // Narrate the whole current cast in ONE batched LLM call. Triggered lazily
+  // when the player opens a detail panel: the first click narrates everyone
+  // for this moment, so every other NPC opened in the same phase is free.
+  //
+  // Only *distinct, uncached* situations are sent — so at scale this is bounded
+  // by how many distinct situations the visible cast occupies, not by the
+  // population. Re-opens, same-situation NPCs, and returning runs (persisted)
+  // all hit the cache for zero tokens. No proactive pre-generation.
+  narrateCurrentCast: async () => {
+    const { npcs, phaseIndex, worldSeed, narrationBuckets, pendingKeys } = get();
     if (!worldSeed || npcs.length === 0) return;
 
     const phase = DAY_PHASES[phaseIndex] as DayPhase;
+    const seen = new Set<string>();
+    const missing: Situation[] = [];
+    for (const npc of npcs) {
+      const sit = situationOf(npc, phase);
+      if (narrationBuckets[sit.key] || pendingKeys.includes(sit.key) || seen.has(sit.key)) continue;
+      seen.add(sit.key);
+      missing.push(sit);
+    }
+    if (missing.length === 0) return;
 
-    // Already in-flight for this exact (day, phase) — don't double-call.
-    if (pendingNarrationPhase?.day === day && pendingNarrationPhase?.phase === phase) return;
-
-    // All NPCs already have narrations for this moment — nothing to do.
-    const allCached = npcs.every((n) => narrationCache[makeNarrationKey(n.id, day, phase)]);
-    if (allCached) return;
-
-    set({ pendingNarrationPhase: { day, phase } });
-
+    const keys = missing.map((s) => s.key);
+    set({ pendingKeys: [...pendingKeys, ...keys] });
     try {
-      const results = await narrateNPCsForPhase({ day, phase, npcs, worldSeed, worldPressure: get().worldPressure });
-
-      // Merge new narrations into the cache.
-      const additions = Object.fromEntries(
-        Object.entries(results).map(([npcId, text]) => [
-          makeNarrationKey(npcId, day, phase) as NarrationKey,
-          text,
-        ]),
-      ) as NarrationCache;
-
+      const result = await fetchNarrationVariants({
+        day: get().day,
+        phase,
+        situations: missing,
+        worldSeed,
+        worldPressure: get().worldPressure,
+      });
       set((s) => ({
-        narrationCache: { ...s.narrationCache, ...additions },
-        pendingNarrationPhase: null,
+        narrationBuckets: { ...s.narrationBuckets, ...result },
+        pendingKeys: s.pendingKeys.filter((k) => !keys.includes(k)),
       }));
-    } catch (err) {
-      console.error("[narrator] batch call failed:", err);
-      set({ pendingNarrationPhase: null });
+      saveBuckets(get().narrationBuckets);
+    } catch {
+      set((s) => ({ pendingKeys: s.pendingKeys.filter((k) => !keys.includes(k)) }));
     }
   },
 

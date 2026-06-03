@@ -12,4 +12,12 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    preview: {
+      // Production is served via `vite preview` (see package.json "start").
+      // Render/other PaaS serve under their own hostnames, so allow them
+      // (vite blocks unknown hosts by default).
+      allowedHosts: [".onrender.com"],
+    },
+  },
 });

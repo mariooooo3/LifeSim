@@ -1,62 +1,73 @@
-import type { NPC } from "@/lib/simulation/types";
 import type { DayPhase } from "@/lib/simulation/constants";
 import type { WorldSeed } from "@/lib/simulation/worldSeed";
-import { buildNarration } from "@/lib/simulation/narrationHelpers";
 import { narratePhase } from "@/lib/api/narrate.functions";
+import { fallbackVariants, type Situation } from "./situation";
 
-interface NarrateInput {
+// Phrasings generated per situation. At demo scale each NPC has a unique role
+// (role is part of the situation key) so situations are 1:1 with NPCs and a
+// single phrasing is all that's used — generating more would just waste output
+// tokens. Raise this only at scale, where many NPCs share a bucket and need
+// distinct lines (the client picks one per NPC via id hash).
+export const VARIANTS_PER_SITUATION = 1;
+
+interface FetchInput {
   day: number;
   phase: DayPhase;
-  npcs: NPC[];
+  situations: Situation[];
   worldSeed: WorldSeed;
   worldPressure?: number;
 }
 
 // ---------------------------------------------------------------------------
-// narrateNPCsForPhase — one batch call per (day, phase) for the whole cast.
+// fetchNarrationVariants — for a set of *missing* situations, return a pool of
+// variants per situation key.
 //
-// Tries LLM via server function first (requires ANTHROPIC_API_KEY on server).
-// Falls back to rule-based narration if key is absent or call fails.
-// Rate limiting is handled upstream: the store only calls this when no cached
-// narration exists for the current (npcId, day, phase) combination.
+// Tries the LLM (server function, needs ANTHROPIC_API_KEY). Falls back to
+// rule-based variants for any key the LLM is missing or for the whole batch if
+// the call fails. Always returns a complete map for the requested keys.
 
-export async function narrateNPCsForPhase({
+export async function fetchNarrationVariants({
   day,
   phase,
-  npcs,
+  situations,
   worldSeed,
   worldPressure = 0.3,
-}: NarrateInput): Promise<Record<string, string>> {
+}: FetchInput): Promise<Record<string, string[]>> {
+  if (situations.length === 0) return {};
+
+  let llm: Record<string, string[]> | null = null;
   try {
-    const result = await narratePhase({
+    llm = await narratePhase({
       data: {
         day,
         phase,
         worldCity: worldSeed.regionId,
         worldPressure,
-        npcs: npcs.map((n) => ({
-          id: n.id,
-          name: n.name,
-          role: n.role,
-          currentAction: n.currentAction,
-          location: n.location,
-          stress: n.stress,
-          mood: n.mood,
-          money: n.money,
-          needs: n.needs,
-          lastMajorEvent: n.lastMajorEvent,
-          missedOpportunities: n.missedOpportunities,
-          activeOpportunity: n.activeOpportunity ? { title: n.activeOpportunity.title } : null,
+        variants: VARIANTS_PER_SITUATION,
+        situations: situations.map((s) => ({
+          key: s.key,
+          role: s.role,
+          action: s.action,
+          location: s.location,
+          timeOfDay: s.timeOfDay,
+          stressBand: s.stressBand,
+          moneyBand: s.moneyBand,
+          energyBand: s.energyBand,
+          mood: s.mood,
+          hasOpportunity: s.hasOpportunity,
         })),
       },
     });
-    if (result) return result;
   } catch {
-    // fall through to rule-based
+    llm = null;
   }
 
-  // Rule-based fallback
-  return Object.fromEntries(
-    npcs.map((npc) => [npc.id, buildNarration(npc, day, phase, worldSeed)]),
-  );
+  const out: Record<string, string[]> = {};
+  for (const s of situations) {
+    const fromLlm = llm?.[s.key];
+    out[s.key] = fromLlm && fromLlm.length > 0
+      ? fromLlm
+      : fallbackVariants(s, VARIANTS_PER_SITUATION);
+  }
+  return out;
 }

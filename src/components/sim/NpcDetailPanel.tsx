@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type { NPC, HiddenTrait } from "@/lib/simulation/types";
-import { makeNarrationKey } from "@/lib/simulation/types";
+import { situationKey, pickVariant } from "@/lib/llm/situation";
 import { narrateRightNow } from "@/lib/simulation/narrator";
 import { DAY_PHASES } from "@/lib/simulation/constants";
 import type { DayPhase } from "@/lib/simulation/constants";
@@ -24,25 +24,27 @@ interface Props {
 }
 
 export function NpcDetailPanel({ npc, allNpcs = [], day = 1, onClose }: Props) {
-  // --- Narration from store ---
-  const storeDay        = useLifeSimStore((s) => s.day);
-  const phaseIndex      = useLifeSimStore((s) => s.phaseIndex);
-  const narrationCache  = useLifeSimStore((s) => s.narrationCache);
-  const pending         = useLifeSimStore((s) => s.pendingNarrationPhase);
-  const generateNarrations = useLifeSimStore((s) => s.generateNarrationsForCurrentPhase);
+  // --- Narration from store (situation-bucket cache) ---
+  const phaseIndex        = useLifeSimStore((s) => s.phaseIndex);
+  const narrationBuckets  = useLifeSimStore((s) => s.narrationBuckets);
+  const pendingKeys        = useLifeSimStore((s) => s.pendingKeys);
+  const narrateCurrentCast = useLifeSimStore((s) => s.narrateCurrentCast);
 
   const phase          = DAY_PHASES[phaseIndex] as DayPhase;
-  const narrationKey   = npc ? makeNarrationKey(npc.id, storeDay, phase) : null;
-  const narrationText  = narrationKey ? narrationCache[narrationKey] : undefined;
-  const isPhasePending = pending?.day === storeDay && pending?.phase === phase;
+  const sitKey         = npc ? situationKey(npc, phase) : null;
+  const variants       = sitKey ? narrationBuckets[sitKey] : undefined;
+  // Same situation → pool of phrasings; this NPC stably picks one by id hash.
+  const narrationText  = variants && npc ? pickVariant(variants, npc.id) : undefined;
+  const isPhasePending = sitKey ? pendingKeys.includes(sitKey) : false;
 
-  // Trigger a batch narration call the first time this phase is opened.
+  // Opening a panel narrates the whole cast in one batched call (everyone gets
+  // a story from the first click); cached situations cost nothing.
   useEffect(() => {
     if (!npc) return;
     if (!narrationText && !isPhasePending) {
-      generateNarrations();
+      narrateCurrentCast();
     }
-  }, [npc, narrationText, isPhasePending, generateNarrations]);
+  }, [npc, narrationText, isPhasePending, narrateCurrentCast]);
 
   // --- Keyboard close ---
   useEffect(() => {

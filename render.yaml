@@ -1,0 +1,24 @@
+# Render Blueprint for LifeSim (TanStack Start SSR).
+# Deploy: push this repo, then on Render → "New +" → "Blueprint" and pick this repo.
+#
+# The app is served in production via `vite preview` (npm run start), which runs
+# the built SSR server. It binds to 0.0.0.0 on Render's $PORT automatically.
+services:
+  - type: web
+    name: lifesim
+    env: node
+    plan: free
+    # Build needs devDependencies (vite, tailwind, etc.). NODE_ENV=production
+    # on Render would skip them, so force their installation.
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm run start
+    autoDeploy: true
+    envVars:
+      # Vite 7 requires Node 20.19+ / 22.12+.
+      - key: NODE_VERSION
+        value: 22.12.0
+      # Optional: enables live LLM narration + end-of-week summary.
+      # Without it the app falls back to built-in rule-based narration.
+      # Set the actual value in the Render dashboard (do NOT commit it).
+      - key: ANTHROPIC_API_KEY
+        sync: false
