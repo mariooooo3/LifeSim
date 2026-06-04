@@ -1,20 +1,7 @@
 import type { NPC, HiddenTrait } from "@/lib/simulation/types";
 import type { DayPhase } from "@/lib/simulation/constants";
 import { toSimPhase } from "@/lib/simulation/constants";
-
-// ---------------------------------------------------------------------------
-// Situation layer — the heart of the cost model.
-//
-// Narration is NOT keyed by NPC identity. It is keyed by a *quantized
-// situation*: role + action + time-of-day + coarse bands for stress / money /
-// energy + mood + whether an opportunity is pending. Many NPCs (and many
-// moments) collapse onto the same key, so the LLM is asked about a *kind of
-// moment* once, then the answer is reused for everyone in that situation.
-//
-// This is why a click is almost never an LLM call, and why cost scales with
-// the number of distinct situations (finite, saturates) rather than with the
-// number of NPCs or clicks. No embeddings / vector DB needed: the state is
-// low-cardinality structured data, so direct bucketing beats semantic search.
+import type { PlayerProfile, PlayerState } from "@/store/useLifeSimStore";
 
 export type StressBand = "calm" | "warm" | "stressed" | "crisis";
 export type MoneyBand = "broke" | "tight" | "stable" | "comfortable";
@@ -81,9 +68,6 @@ export function situationOf(npc: NPC, phase: DayPhase): Situation {
   // memories are kept sorted by impact (highest first) in the sim tick.
   const mem = npc.memories.length > 0 ? npc.memories[0] : null;
 
-  // The key omits names/numbers — only discrete bands + the trait-stable role,
-  // plus opportunity/memory *type* so a cached line refreshes when the NPC's
-  // narrative state changes (no stale memory references on reuse).
   const key = [
     npc.role,
     npc.currentAction,
@@ -92,6 +76,7 @@ export function situationOf(npc: NPC, phase: DayPhase): Situation {
     mBand,
     eBand,
     npc.mood,
+    npc.personality.hiddenTrait,
     opp ? opp.type : "_",
     mem ? mem.type : "_",
   ].join("|");
@@ -119,11 +104,6 @@ export function situationKey(npc: NPC, phase: DayPhase): string {
   return situationOf(npc, phase).key;
 }
 
-// ---------------------------------------------------------------------------
-// Deterministic per-NPC variant pick — the same situation yields a *pool* of
-// phrasings; each NPC stably selects one via a hash of its id, so two NPCs in
-// the same situation read differently while a given NPC stays consistent.
-
 function hashId(id: string): number {
   let h = 2166136261;
   for (let i = 0; i < id.length; i++) {
@@ -137,11 +117,6 @@ export function pickVariant(variants: string[], npcId: string): string {
   if (variants.length === 0) return "";
   return variants[hashId(npcId) % variants.length];
 }
-
-// ---------------------------------------------------------------------------
-// Relevance score — drives the LOD "hot set". Only dramatic / salient NPCs are
-// worth a fresh LLM call when prewarming; the calm long tail uses the
-// rule-based fallback (free) until someone actually clicks them.
 
 export function relevanceScore(npc: NPC): number {
   let score = 0;
@@ -158,11 +133,6 @@ export function relevanceScore(npc: NPC): number {
 export function isNarrationWorthy(npc: NPC): boolean {
   return relevanceScore(npc) >= 2;
 }
-
-// ---------------------------------------------------------------------------
-// Rule-based fallback — produces `count` distinct, name-free variants for a
-// situation. Used when no API key is present or the LLM call fails, and to
-// fill any keys the LLM omitted. Name-free so the lines reuse across NPCs.
 
 const TIME_PHRASE: Record<TimeOfDay, string> = {
   morning: "this morning",
@@ -279,13 +249,74 @@ export function fallbackVariants(sit: Situation, count: number): string[] {
   const out: string[] = [];
   for (let i = 0; i < count; i++) {
     const a = actions[(seed + i) % actions.length];
-    // Tail rotates between recent memory, the personality trait, and mood/state
-    // — keeps each line to ~2 sentences while showing who this person is.
-    let tail: string;
-    if (mem) tail = `${cap(mem)}.`;
-    else if ((seed + i) % 3 === 0) tail = `Still ${sit.traitPhrase}.`;
-    else tail = states[(seed + i) % states.length];
-    out.push(`${a} ${tail}`);
+    // Each variant: an action sentence, a personality/memory beat, and a state
+    // beat — ~3 sentences, so the fallback matches the LLM's fuller length and
+    // each line still shows who this person is.
+    const trait = `Still ${sit.traitPhrase}.`;
+    const state = states[(seed + i) % states.length];
+    const middle = mem ? `${cap(mem)}.` : trait;
+    // Avoid repeating the same beat twice when there's no memory to vary it.
+    const end = mem || (seed + i) % 2 === 0 ? state : trait;
+    out.push(middle === end ? `${a} ${middle}` : `${a} ${middle} ${end}`);
   }
   return out;
+}
+
+function locationToAction(location: string): string {
+  if (location === "Office") return "work";
+  if (location === "Home") return "relax";
+  return "socialize";
+}
+
+function moodLabel(mood: number): string {
+  if (mood >= 70) return "content";
+  if (mood >= 50) return "neutral";
+  if (mood >= 30) return "restless";
+  return "stressed";
+}
+
+export function situationOfPlayer(
+  player: PlayerProfile,
+  state: PlayerState,
+  phase: DayPhase,
+): Situation {
+  const timeOfDay = toSimPhase(phase) as TimeOfDay;
+  const action = locationToAction(state.location);
+  const stressProxy = Math.max(0, 100 - state.mood);
+  const sBand = stressBand(stressProxy);
+  const mBand = moneyBand(state.money * 5);
+  const eBand = energyBand(state.energy);
+  const mood = moodLabel(state.mood);
+  const trait: HiddenTrait = "approvalSeeking";
+
+  const key = [
+    player.professionArchetype ?? "creative",
+    action,
+    timeOfDay,
+    sBand,
+    mBand,
+    eBand,
+    mood,
+    trait,
+    "_",
+    "_",
+  ].join("|");
+
+  return {
+    key,
+    role: player.professionTitle || player.archetype,
+    action,
+    location: state.location,
+    timeOfDay,
+    stressBand: sBand,
+    moneyBand: mBand,
+    energyBand: eBand,
+    mood,
+    trait,
+    traitPhrase: TRAIT_PHRASE[trait],
+    topMemory: null,
+    topMemoryType: "none",
+    opportunityTitle: null,
+    opportunityType: "none",
+  };
 }

@@ -7,6 +7,7 @@ import type { DayPhase } from "@/lib/simulation/constants";
 import { useLifeSimStore } from "@/store/useLifeSimStore";
 import { Avatar } from "./Avatar";
 import { MoodDot, Stat } from "./MoodDot";
+import { Typewriter } from "./Typewriter";
 
 const HIDDEN_TRAIT_READ: Record<HiddenTrait, string> = {
   fearOfFailure:    "Afraid of being exposed as not enough",
@@ -88,17 +89,17 @@ export function NpcDetailPanel({ npc, allNpcs = [], day = 1, onClose }: Props) {
         </div>
 
         <Section title="Right Now">
-          {narrationText ? (
-            <p className="text-[14px] leading-relaxed text-foreground/90 text-balance">
-              {narrationText}
-            </p>
-          ) : isPhasePending ? (
-            <p className="text-[13px] text-muted-foreground/60 italic">
-              Generating story for this moment…
-            </p>
-          ) : (
-            <p className="text-[14px] leading-relaxed text-foreground/90 text-balance">
-              {narrateRightNow(npc, day)}
+          <p className="text-[14px] leading-relaxed text-foreground/90 text-balance">
+            <Typewriter
+              key={`${npc.id}:${narrationText ?? "fallback"}`}
+              text={narrationText ?? narrateRightNow(npc, day)}
+            />
+          </p>
+
+          {!narrationText && isPhasePending && (
+            <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground/50 italic">
+              <span className="inline-block size-1.5 animate-pulse rounded-full bg-current" aria-hidden />
+              sharpening the story…
             </p>
           )}
         </Section>

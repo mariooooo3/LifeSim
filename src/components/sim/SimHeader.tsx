@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { DAY_PHASES, PHASE_LABELS } from "@/lib/simulation/constants";
+import { DAY_PHASES, PHASE_LABELS, DAYS_PER_WEEK, PHASES_PER_DAY } from "@/lib/simulation/constants";
 import type { DayPhase } from "@/lib/simulation/constants";
 import { computeWorldMood } from "@/lib/simulation/narrator";
 
@@ -16,6 +16,7 @@ export interface SimHeaderProps {
   onTogglePause: () => void;
   speed: number;
   onSetSpeed: (speed: SimulationSpeed) => void;
+  runEnded?: boolean;
 }
 
 export function SimHeader({
@@ -28,6 +29,7 @@ export function SimHeader({
   onTogglePause,
   speed,
   onSetSpeed,
+  runEnded = false,
 }: SimHeaderProps) {
   const phase = (DAY_PHASES[phaseIndex] ?? DAY_PHASES[0]) as DayPhase;
   const phaseLabel = PHASE_LABELS[phase];
@@ -77,7 +79,35 @@ export function SimHeader({
       </div>
 
       <div className="hidden items-center gap-6 md:flex">
-        <Meta label="Day" value={`Day ${day}`} />
+        <div className="leading-tight">
+          <div className="label">Day</div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-foreground/90">Day {day}</span>
+            <div className="flex items-center gap-[3px]">
+              {Array.from({ length: DAYS_PER_WEEK }, (_, i) => {
+                const done = runEnded ? i < DAYS_PER_WEEK : i < day - 1;
+                const current = !runEnded && i === day - 1;
+                const progress = current
+                  ? Math.round((phaseIndex / PHASES_PER_DAY) * 100)
+                  : null;
+                return (
+                  <div
+                    key={i}
+                    className="relative h-[5px] w-[14px] rounded-full overflow-hidden"
+                    style={{ background: done || runEnded ? "var(--calm)" : "color-mix(in oklab, var(--foreground) 12%, transparent)" }}
+                  >
+                    {current && (
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
+                        style={{ width: `${progress}%`, background: "var(--calm)" }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
         <Meta label="Phase" value={phaseLabel} />
         <div className="leading-tight">
           <div className="label">Pressure</div>

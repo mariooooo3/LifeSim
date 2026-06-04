@@ -69,9 +69,6 @@ export const generateEndSummary = createServerFn({ method: "POST" })
     }
   });
 
-// ---------------------------------------------------------------------------
-// Rule-based fallback — used when no API key is configured
-
 function buildFallback(data: {
   npcs: Array<{ id: string; name: string; role: string; stress: number; mood: string; missedOpportunities: number }>;
   player: { name: string; profession: string } | null;

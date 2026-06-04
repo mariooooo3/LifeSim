@@ -133,7 +133,6 @@ export function EndSummaryOverlay({
           </div>
         </div>
 
-        {/* Scalability note — addresses the task requirement */}
         <div className="rounded-xl border border-foreground/8 bg-foreground/[0.02] px-5 py-4">
           <div className="label mb-2">How this scales to hundreds of NPCs</div>
           <p className="text-[12px] leading-relaxed text-foreground/70">

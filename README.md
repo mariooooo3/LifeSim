@@ -1,105 +1,146 @@
 # LifeSim
 
-**A small city of 10 NPCs living out a week. Each has an identity, makes its own choices, and when you click one it narrates its current moment in real time with an LLM. Built so the same design holds at 10 NPCs or 1,000.**
+10 NPCs living out a week in a city. Click one and an LLM narrates their current moment. Built so the same design holds at 10 or 1,000 NPCs.
 
-> Trial task: "Imagine hundreds of NPCs and you can't afford an LLM per NPC. They must feel alive without simulating all of them in detail non-stop." This repo is the answer, and the two ideas below are the heart of it.
-
----
-
-## The one insight
-
-**Aliveness comes from a deterministic simulation (free). The LLM is only a thin, cached presentation layer on top.**
-
-If you make the LLM the source of life, you can't scale. So the world runs without it: a utility-AI tick advances every NPC every phase at ~0 cost. The LLM is summoned lazily, on demand, and almost always served from cache. It never drives the simulation, it only narrates a moment when you actually look.
+> Task: "Imagine hundreds of NPCs and you can't afford an LLM per NPC. They must feel alive without simulating all of them in detail non-stop."
 
 ---
 
-## Feature 1: An LLM layer whose cost barely grows
+## Two layers
 
-A click is **not** an LLM call. Narration is keyed by a quantized **situation**, not by NPC identity. The key is:
+**Simulation — free.** A utility-AI tick advances every NPC every phase at ~0 cost. The LLM never drives the simulation; it only narrates what's already happened when you look.
 
-**role + action + time-of-day + stress-band + money-band + energy-band + mood + opportunity-type + memory-type**
+**Narration — cheap and cached.** A click is a cache lookup, not an LLM call.
 
-Real values become coarse bands (a stress of 73 becomes "stressed"), so many NPCs and many moments collapse onto the same key. Then:
+---
 
-| Step | What happens | Cost |
+## The NPC
+
+Each NPC is generated from a city seed and carries:
+
+- **Identity:** culture-specific name, role (26 options weighted by city), age, salary, rent
+- **Personality:** discipline, ambition, sociability, resilience + a hidden trait (fearOfFailure / jealous / insecure / riskSeeking / approvalSeeking) that colors every narration
+- **State:** stress, money, energy, social, fun — updated every phase
+- **Memory:** up to 5 defining moments (success, conflict, missed opportunity, financial stress…), sorted by impact score
+- **Relationships:** affinity + trust with each other NPC, evolving through socializing and stress
+- **Opportunities:** job offers, party invites, risky investments — spawn, age out, or get accepted based on current action alignment
+
+---
+
+## What makes them feel alive
+
+Every tick, each NPC:
+
+1. Scores every possible action (work / eat / socialize / sleep / relax) using a utility function over needs, stress, money, personality, and world pressure
+2. Takes the top-scoring action, which updates their state and mood
+3. Can trigger emergent consequences: burnout, sickness, isolation, financial collapse, missed deadlines — none scripted, all derived from state
+4. Accumulates memories and evolves relationships with the rest of the cast
+
+No scripts. No branching trees. Drama is a byproduct of the simulation.
+
+---
+
+## Why LLM calls are cheap
+
+Narration is keyed by a quantized **situation**, not by NPC identity:
+
+**role · action · time-of-day · stress-band · money-band · energy-band · mood · hidden-trait · opportunity-type · memory-type**
+
+Real values collapse to coarse bands (stress 73 → "stressed"), so many NPCs and many moments share the same key.
+
+| Event | What happens | Cost |
 |---|---|---|
-| Click an NPC | Look up its situation key in the cache | **0 tokens** |
-| Cache miss | One batched call narrates the whole visible cast's uncached situations | 1 call, shared |
-| Same situation later, or another NPC, or next run | Served from the persisted cache | **0 tokens** |
+| Click an NPC | Cache lookup | **0 tokens** |
+| Cache miss | One batched call narrates the whole visible cast | 1 call, shared |
+| Same situation later, another NPC, or next run | Served from persisted cache | **0 tokens** |
 
-**Why this is the right tool (and a vector DB or RAG is not):** sim state is low-cardinality structured data, so similarity is computed directly via bucketing, an O(1) hash lookup, no embeddings, no infra, deterministic. Cost scales with the number of distinct situations (a finite set that saturates), not with the number of NPCs or clicks.
+**Design layers, in order of leverage:**
+1. **Deterministic sim** — every NPC is alive for free, always. No LLM involved.
+2. **Situation cache + variants** — a click is an O(1) hash lookup. Each NPC picks a line deterministically by id, so cached lines still feel individual.
+3. **One batched call on demand** — opening any panel narrates the whole cast (NPCs + player) in a single request. No per-click calls, no speculative pre-generation.
+4. **Persistence** — the bucket cache survives reloads and runs via localStorage. Warm-up is paid once.
+5. **Provider gateway** — OpenRouter (haiku, cheapest), then Anthropic, then a rule-based fallback — behind one function. Zero downtime if a provider is unavailable.
 
-**Levels of the design, in order of leverage:**
-1. **Deterministic sim:** every NPC is alive for free, always. (src/lib/simulation/)
-2. **Situation cache plus variants:** a click is a cache lookup; each NPC picks a phrasing deterministically by id hash, so cached lines still feel individual. (src/lib/llm/situation.ts)
-3. **One batched call on demand:** opening a panel narrates everyone at once; no per-click calls, no speculative pre-generation. (narrateCurrentCast in the store)
-4. **Persistence:** the bucket cache survives reloads and runs (and would survive users, server-side), so warm-up is paid once. (localStorage)
-5. **Provider gateway:** OpenRouter (cheap claude-3.5-haiku), then Anthropic, then a rule-based fallback, behind one function. (src/lib/api/callLLM.ts)
+**Variant pool:** the cache stores `string[]` per key, not a single string. If 3 NPCs share a key, the LLM writes 3 distinct lines. Each NPC picks one via FNV-1a hash of their id — stable on re-click, distinct across NPCs.
 
-**Why it fits procedurally-generated NPCs specifically:** the NPCs aren't hardcoded; names, roles, personalities and lives differ every seed. You could never author per-NPC content for them. But every one of them, however generated, lands in the same finite situation space, so the cache covers an infinite cast with a bounded set of narrations. More NPCs never means more authored content.
+**Player character:** uses the same system. Their situation key is derived from energy / mood / money / social / location. Included in the same batched call, no extra cost.
 
-**Upper bound for a full week:** 8 phases times 7 days equals 56 batched calls max, and usually far fewer (skipped when nothing's new). Each call is short (1 to 2 sentences, about 50 tokens per NPC).
+**End-of-week:** one final LLM call writes a literary summary for every NPC and the player. The only per-character call in the entire run.
 
-### Cost in numbers
+**Fast-forward:** a button runs all remaining ticks synchronously (~1ms), then holds the globe overlay until the LLM summary arrives.
 
-Model: claude-3.5-haiku via OpenRouter ($0.80 / 1M input tokens, $4.00 / 1M output).
+### Cost
 
-| What | Tokens (approx.) | Cost |
-|---|---|---|
-| One batched call (narrates all 10 NPCs) | ~700 in + ~700 out | **~$0.0034** (about a third of a cent) |
-| Full week, worst case (all 56 calls narrate 10) | n/a | **~$0.19** |
-| Full week, realistic (calls shrink as situations cache) | ~20 to 30 small calls | **~$0.05 to $0.10** |
-| No API key | n/a | **$0** (rule-based narrator) |
+Model: claude-3.5-haiku via OpenRouter ($0.80/1M in · $4.00/1M out)
+
+| Scenario | Cost |
+|---|---|
+| One batched call (10 NPCs) | **~$0.005** |
+| Full week, worst case (56 calls) | **~$0.26** |
+| Full week, realistic (cache warms up) | **~$0.07–$0.14** |
+| No API key | **$0** (rule-based fallback) |
 
 ---
 
-## Feature 2: Diversity from seed and city (no hardcoding)
+## Diversity
 
-Every run is a different world, and every city feels different, all derived, nothing scripted.
+Every run is seeded. Nothing is hardcoded.
 
-- **City seed** (worldSeed.ts): cityBase (stable per city: economic pressure, social intensity, work culture, pace) is mixed with a per-run runSeed. Same city, different runs give a fresh cast; the city keeps its character.
-- **NPC generation** (npcFactory.ts plus culture/): names from region and city pools (Paris uses French, Bucharest uses Romanian), roles weighted by culture (26 roles, non-repeating), and continuously-varied personality, needs and finances. Effectively unbounded variety.
-- **World-event arc** (storyteller.ts): instead of a fixed script, each run draws a seeded, city-weighted schedule from about 28 events. A harsh-economy city pulls more rent hikes and layoffs; a social city pulls more festivals. Deterministic per seed, different every run, no two same-category days in a row.
-- **Narration enrichment:** each line weaves the NPC's hidden trait, most-defining memory and active opportunity, so the same situation reads as this person. Memory and opportunity type are in the cache key, so a cached line refreshes when the NPC's story moves on.
+- **City seed:** each city has a stable profile (economic pressure, work culture, social intensity). Mixed with a per-run seed — same city, different cast every time.
+- **NPC generation:** names from regional pools (Paris → French, Bucharest → Romanian), roles weighted by city culture, continuously varied personality and finances. Content is never authored — always derived.
+- **World events:** ~28 possible events drawn per seed and city type. Harsh-economy cities pull rent hikes and layoffs; social cities pull festivals. No two same-category days in a row.
+- **Narration freshness:** hidden trait + top memory + active opportunity are part of the situation key, so a cached line refreshes automatically when the NPC's story moves on.
 
-**Diversity is high enough that two NPCs can't share a narration at the same time:** role is part of the situation key, and a 10-NPC cast has 10 distinct roles, so no two NPCs ever land on the same key in the same moment. Identical lines only become possible at scale, where roles repeat, and there a per-situation variant pool keeps them distinct.
+---
 
-Net: the simulation produces the drama (emergent, free); the LLM gives it voice (cheap, cached). Diversity scales with seeds and cities, not with hand-written content.
+## Scaling to hundreds
+
+Nothing fundamental changes:
+
+1. **Never narrate everyone.** Only the ~15 NPCs on screen are sent. The rest run free on the deterministic sim.
+2. **Bucketing collapses the crowd.** At 1,000 NPCs, hundreds share a handful of situation keys — cache hit-rate climbs, cost per NPC falls.
+3. **Move cache server-side** (Redis / KV) so warm-up is paid once across all users, not per browser.
+4. **Pre-generate offline.** The situation space is finite and enumerable. One batch job (Anthropic Batch API, 50% cheaper) ships a static library — runtime LLM cost → 0.
+5. **Tiered fidelity.** A relevance score (stress, active opportunities, proximity to player) decides who gets LLM text vs. the free rule-based line.
+
+Cost is bounded by distinct situations — a number that saturates regardless of population size.
 
 ---
 
 ## Architecture
 
-Routes (TanStack Start, SSR): the player moves from / onboarding, to /globe (city picker), to /dashboard, then picks a city.
+```
+┌──────────────────────────────────────────────────────────┐
+│                        UI Layer                          │
+│  NpcDetailPanel · PlayerDetailPanel · Typewriter         │
+│  (React — reads store, triggers narration on click)      │
+└────────────────────────┬─────────────────────────────────┘
+                         │
+┌────────────────────────▼─────────────────────────────────┐
+│               useLifeSimStore  (Zustand)                 │
+│  · tick loop  · NPC + player state  · world pressure     │
+│  · narrationBuckets: Record<key, string[]>  ←──────────┐ │
+│  · narrateCurrentCast() — one batched call per phase    ││
+└──────────┬───────────────────────────┬──────────────────┘│
+           │                           │                   │
+┌──────────▼──────────┐   ┌────────────▼────────────────┐  │
+│  Simulation Engine  │   │      Narration Layer        │  │
+│  tick.ts            │   │  situation.ts               │  │
+│  npcFactory.ts      │   │  · situationKey(npc)        │  │
+│  worldSeed.ts       │   │  · situationOfPlayer(p)     │  │
+│  storyteller.ts     │   │  · pickVariant(pool, id)    │  │
+│  (~0 cost, always)  │   │  narrateNPCs.ts             │  │
+└─────────────────────┘   │  · fetchNarrationVariants() │  │
+                          └────────────┬────────────────┘  │
+                          ┌────────────▼────────────────┐  │
+                          │  narrate.functions.ts       │  │
+                          │  callLLM.ts                 │  │
+                          │  OpenRouter → Anthropic     │  │
+                          │  → rule-based fallback      │  │
+                          └─────────────────────────────┘  │
+┌──────────────────────────────────────────────────────────┘
+│  localStorage  (narrationBuckets — persists across runs)
+└──────────────────────────────────────────────────────────
+```
 
-That initializes the Zustand store (src/store/useLifeSimStore.ts), which holds the world seed, the day and phase clock, the NPCs, the feed, the narration cache, narrateCurrentCast(), and the end-of-week summary.
-
-The store drives two layers:
-
-- **Every 15s tick, the deterministic sim (free):** utilityAI, needs, stress, relationships, consequences, opportunities, storyteller.
-- **On panel open, lazily, the LLM presentation layer (cached):** situation.ts (bucket keys), callLLM.ts (provider gateway), and the narrate and endSummary server functions.
-
-**Stack:** TanStack Start plus React 19, Zustand, Tailwind v4, MapLibre (real city map), Three.js (globe). Typography: one plain system font throughout.
-
-**Where things live**
-
-- src/lib/simulation/ : the engine (tick.ts, utilityAI.ts, needs.ts, stress.ts, relationships.ts, consequences.ts, opportunities.ts, storyteller.ts, worldSeed.ts, npcFactory.ts, culture/).
-- src/lib/llm/ : situation.ts (bucket keys, variants, fallback) and narrateNPCs.ts.
-- src/lib/api/ : callLLM.ts (provider gateway), narrate.functions.ts, endSummary.functions.ts (server functions; keys stay server-side).
-- src/store/useLifeSimStore.ts : orchestration and narration cache.
-- src/components/sim/ : UI surfaces (map, cards, detail panel, feed, header).
-
----
-
-## How to scale to hundreds (the deliverable)
-
-Nothing fundamental changes; you just lean harder on the same two ideas:
-
-1. **You never narrate everyone.** Narration is on-demand; only the roughly 15 NPCs on screen are ever sent. The other 985 stay alive purely through the deterministic sim.
-2. **Bucketing collapses the crowd.** At 1,000 NPCs roles repeat, so hundreds share a handful of situations, the cache hit-rate climbs and cost falls per NPC.
-3. **Move the cache server-side** (Redis, KV, or SQLite) so warm-up is paid once across all users, not per browser.
-4. **Pre-generate offline.** The situation space is finite and enumerable: a one-time batch job (Anthropic Batch API, 50% cheaper) ships a static library, so runtime LLM cost approaches 0.
-5. **Tiered fidelity (LOD).** A relevance score (drama plus proximity to the player) decides who gets bespoke LLM text versus the free rule-based line.
-
-Cost ends up bound by distinct situations, which saturates, independent of population.
+**Click flow:** panel opens → `narrateCurrentCast()` diffs cast against cache → one LLM call for missing keys → pools cached + persisted → `pickVariant(pool, id)` per character → all subsequent clicks in the same phase: 0 tokens.

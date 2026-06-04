@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { DAY_PHASES, PHASE_LABELS } from "@/lib/simulation/constants";
 import type { DayPhase } from "@/lib/simulation/constants";
 import { ORIGIN_STORAGE_KEY } from "@/lib/simulation/constants";
@@ -11,7 +11,9 @@ import { NPCGrid } from "@/components/sim/NPCGrid";
 import { NpcDetailPanel } from "@/components/sim/NpcDetailPanel";
 import { SimHeader } from "@/components/sim/SimHeader";
 import { PlayerCard } from "@/components/sim/PlayerCard";
+import { PlayerDetailPanel } from "@/components/sim/PlayerDetailPanel";
 import { EndSummaryOverlay } from "@/components/sim/EndSummaryOverlay";
+import { CinematicGlobe } from "@/components/sim/CinematicGlobe";
 import { coordsForRegion, useLifeSimStore } from "@/store/useLifeSimStore";
 
 export const Route = createFileRoute("/dashboard")({
@@ -29,9 +31,12 @@ export const Route = createFileRoute("/dashboard")({
 
 function Dashboard() {
   const { world } = Route.useSearch();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<"all" | "stressed" | "calm">("all");
   const [view, setView] = useState<"map" | "cards">("map");
   const [hasStarted, setHasStarted] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
+  const [playerPanelOpen, setPlayerPanelOpen] = useState(false);
 
   const worldName = useLifeSimStore((state) => state.worldName);
   const npcs = useLifeSimStore((state) => state.npcs);
@@ -45,6 +50,7 @@ function Dashboard() {
   const startSimulation = useLifeSimStore((state) => state.startSimulation);
   const stopSimulation = useLifeSimStore((state) => state.stopSimulation);
   const setSpeed = useLifeSimStore((state) => state.setSpeed);
+  const skipToEnd = useLifeSimStore((state) => state.skipToEnd);
   const speed = useLifeSimStore((state) => state.speed);
   const isRunning = useLifeSimStore((state) => state.isRunning);
   const worldSeed = useLifeSimStore((state) => state.worldSeed);
@@ -75,6 +81,12 @@ function Dashboard() {
     else startSimulation();
   };
 
+  const handleSkipToEnd = () => {
+    if (runEnded || isSkipping) return;
+    setIsSkipping(true);
+    requestAnimationFrame(() => requestAnimationFrame(() => skipToEnd()));
+  };
+
   const dashboardWorld = worldName || world;
   const cityName = dashboardWorld.split(",")[0]?.trim() || "Aster";
   const currentPhase = (DAY_PHASES[currentPhaseIndex] ?? DAY_PHASES[0]) as DayPhase;
@@ -96,7 +108,25 @@ function Dashboard() {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* Time-of-day city skyline — stays behind all content */}
+      {isSkipping && (!runEnded || endSummaryPending) && (
+        <div className="fixed inset-0 z-[70] overflow-hidden bg-black">
+          <CinematicGlobe
+            pins={[]}
+            selectedId=""
+            onSelect={() => {}}
+            className="absolute inset-0 w-full h-full"
+          />
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none">
+            <div className="font-display text-3xl font-semibold tracking-tight text-white drop-shadow-lg">
+              7 days pass in an instant
+            </div>
+            <div className="text-sm text-white/60 animate-pulse">
+              {runEnded ? "Writing their stories…" : "Compressing the week…"}
+            </div>
+          </div>
+        </div>
+      )}
+
       <DashboardBackground phase={currentPhase} />
 
       <SimHeader
@@ -109,15 +139,15 @@ function Dashboard() {
         onTogglePause={handlePlay}
         speed={speed}
         onSetSpeed={setSpeed}
+        runEnded={runEnded}
       />
 
       <main className="mx-auto grid max-w-[1600px] gap-6 px-6 py-6 lg:grid-cols-[220px_1fr_340px]">
         {/* Left column — player card */}
         <aside className="space-y-4 lg:sticky lg:top-[76px] lg:self-start">
           {player
-            ? <PlayerCard player={player} state={playerState} />
-            : <div className="glass rounded-2xl p-4 text-[12px] text-muted-foreground">No character yet.</div>
-          }
+            ? <PlayerCard player={player} state={playerState} onClick={() => setPlayerPanelOpen(true)} />
+            : <div className="glass rounded-2xl p-4 text-[12px] text-muted-foreground">No character yet.</div>}
         </aside>
 
         <section>
@@ -193,6 +223,15 @@ function Dashboard() {
                     </button>
                   ))}
                 </div>
+                <div className="h-4 w-px bg-foreground/10" />
+                <button
+                  onClick={handleSkipToEnd}
+                  disabled={runEnded || isSkipping}
+                  className="rounded-full px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
+                  title="Skip to end of week"
+                >
+                  ⏭ End
+                </button>
               </div>
             </div>
           ) : (
@@ -222,6 +261,15 @@ function Dashboard() {
         onClose={() => selectNpc(null)}
       />
 
+      {playerPanelOpen && player && playerState && (
+        <PlayerDetailPanel
+          player={player}
+          state={playerState}
+          day={currentDay}
+          onClose={() => setPlayerPanelOpen(false)}
+        />
+      )}
+
       {runEnded && (
         <EndSummaryOverlay
           npcs={npcs}
@@ -231,17 +279,7 @@ function Dashboard() {
           endSummaryPending={endSummaryPending}
           worldName={dashboardWorld}
           worldPressure={worldPressure}
-          onNewRun={() => {
-            try {
-              const raw = localStorage.getItem(ORIGIN_STORAGE_KEY);
-              const saved = raw ? (JSON.parse(raw) as { regionId?: string }) : {};
-              const regionId = saved.regionId ?? "r-nweu";
-              const { lat, lng } = coordsForRegion(regionId);
-              initWorld(regionId, lat, lng, world);
-            } catch {
-              initWorld("r-nweu", 59.3, 18.1, world);
-            }
-          }}
+          onNewRun={() => navigate({ to: "/globe" })}
         />
       )}
     </div>

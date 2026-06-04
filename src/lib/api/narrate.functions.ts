@@ -2,12 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { callLLM, hasLLM } from "./callLLM";
 
-// One situation = a quantized "kind of moment". The LLM is asked to write a
-// pool of N distinct, name-free narrations per situation; the client then
-// assigns one to each NPC. This is what decouples cost from NPC/click count.
-
 const SituationSchema = z.object({
   key: z.string(),
+  count: z.number(),
   role: z.string(),
   action: z.string(),
   location: z.string(),
@@ -28,19 +25,20 @@ export const narratePhase = createServerFn({ method: "POST" })
       phase: z.string(),
       worldCity: z.string(),
       worldPressure: z.number(),
-      variants: z.number(),
       situations: z.array(SituationSchema),
     }),
   )
   .handler(async ({ data }): Promise<Record<string, string[]> | null> => {
     if (!hasLLM() || data.situations.length === 0) return null;
 
-    const n = Math.max(1, Math.min(6, data.variants));
+    // Each situation requests exactly as many lines as NPCs share its key.
+    const countFor = (c: number) => Math.max(1, Math.min(6, c));
+    const totalLines = data.situations.reduce((sum, s) => sum + countFor(s.count), 0);
 
     const sitLines = data.situations
       .map(
         (s) =>
-          `"${s.key}": a ${s.role} who is ${s.action} at ${s.location}, ${s.timeOfDay}. ` +
+          `"${s.key}" [write ${countFor(s.count)}]: a ${s.role} who is ${s.action} at ${s.location}, ${s.timeOfDay}. ` +
           `Stress ${s.stressBand}, energy ${s.energyBand}, finances ${s.moneyBand}, mood ${s.mood}. ` +
           `Personality: ${s.traitPhrase}.` +
           (s.topMemory ? ` Recently: ${s.topMemory}` : "") +
@@ -50,16 +48,20 @@ export const narratePhase = createServerFn({ method: "POST" })
 
     const prompt =
       `You write short, literary, grounded narration for a life-simulation game.\n` +
-      `For EACH situation below, write ${n} narration(s) of 1–2 sentences (max ~35 words).\n` +
-      `Weave the personality and any recent memory or opportunity in naturally — let them ` +
-      `make each line specific. Do NOT use names (lines are assigned to characters). No clichés.\n` +
+      `For EACH situation below, write EXACTLY the number of narrations shown in [write N] after its key. Each is 2–3 sentences (~40–60 words).\n\n` +
+      `Make every line feel like a DIFFERENT person observed by a sharp novelist:\n` +
+      `- Let the personality drive the line — it should change what the character notices, fears, or reaches for. The same action read by an anxious person vs. a reckless one should sound nothing alike.\n` +
+      `- Vary the craft across lines: change the opening (don't start them all with "The ..." or the role), the sentence rhythm, and the angle (an action, a gesture, an inner thought, a small sensory detail, a thing left unsaid).\n` +
+      `- Ground it in one concrete, specific detail rather than a generic mood statement. Weave any recent memory or opportunity in only if it sharpens the moment.\n` +
+      `- No names (lines are assigned to characters), no clichés, no therapy-speak, no two lines that share a structure.\n\n` +
       `World: ${data.worldCity}, Day ${data.day}, ${data.phase}. City pressure ${Math.round(data.worldPressure * 100)}%.\n\n` +
-      `Reply ONLY with valid JSON mapping each key to an array of ${n} string(s):\n` +
+      `Reply ONLY with valid JSON mapping each key to an array of exactly the requested number of string(s):\n` +
       `{"<key>":["..."], ...}\n\n` +
       sitLines;
 
-    // Budget output to the work requested: ~50 tokens per short variant.
-    const maxTokens = Math.min(2400, data.situations.length * n * 50 + 150);
+    // Budget output to the work actually requested: ~85 tokens per 2–3 sentence
+    // line, summed over every key's requested count (not a flat per-key number).
+    const maxTokens = Math.min(4000, totalLines * 85 + 200);
 
     const text = await callLLM(prompt, maxTokens);
     if (!text) return null;

@@ -45,13 +45,12 @@ export interface TickOutput {
 }
 
 function addMemory(npc: NPC, mem: Memory): NPC {
-  const sorted = [...npc.memories, mem]
+  const sorted = [...npc.memories.filter((m) => m.text !== mem.text), mem]
     .sort((a, b) => b.impact - a.impact)
     .slice(0, MEMORIES_MAX);
   return { ...npc, memories: sorted };
 }
 
-// Sync needs.money to actual money balance (0-100 perceived financial security)
 function syncNeedsMoney(npc: NPC): NPC {
   let perceived: number;
   if (npc.money < 0)        perceived = Math.max(0, 10 + npc.money / 20);
@@ -61,7 +60,6 @@ function syncNeedsMoney(npc: NPC): NPC {
   return { ...npc, needs: { ...npc.needs, money: Math.round(perceived) } };
 }
 
-// Try to accept an active opportunity based on current action + probability
 function tryAcceptOpportunity(
   npc: NPC,
   action: SimAction,
@@ -72,7 +70,6 @@ function tryAcceptOpportunity(
   const opp = npc.activeOpportunity;
   if (!opp || opp.accepted || opp.resolved) return { npc, event: null };
 
-  // Check if current action aligns with opportunity type
   const aligned =
     (opp.type === "jobOffer" && action === "work") ||
     (opp.type === "partyInvite" && action === "socialize" && (phase === "earlyEvening" || phase === "lateEvening")) ||
@@ -120,26 +117,19 @@ export function simulateTick(input: TickInput): TickOutput {
   const events: SimEvent[] = [];
   const updatedNpcs: NPC[] = [];
 
-  // Throttle: routine action events, staggered across NPCs
   const shouldEmitAction = (npcIdx: number) => (npcIdx + tickCount) % 3 === 0;
 
-  // Build an index of NPC names for relationship events
   const npcNames: Record<string, string> = {};
   for (const n of npcs) npcNames[n.id] = n.name;
 
   for (let npcIdx = 0; npcIdx < npcs.length; npcIdx++) {
     let n = { ...npcs[npcIdx] };
     const evtBase = { day, phase };
-    // Seed varies with tick so descriptions rotate over time
     const nameSeed = n.name.charCodeAt(0) ^ (tickCount * 31) ^ (npcIdx * 7);
 
-    // 1. Expire old opportunities
     n = resolveExpiredOpportunities(n, day);
-
-    // 2. Sync perceived financial security
     n = syncNeedsMoney(n);
 
-    // 3. Apply world event effects (first phase of day only — applied by store)
     if (worldEffects) {
       if (worldEffects.energyDelta) {
         n = { ...n, needs: { ...n.needs, energy: clampStat(n.needs.energy + worldEffects.energyDelta) } };
@@ -152,17 +142,14 @@ export function simulateTick(input: TickInput): TickOutput {
       }
     }
 
-    // 4. Decay needs
     n = { ...n, needs: decayNeeds(n.needs) };
 
-    // 5. Compute relationship score for utility context
     const relEntries = Object.entries(n.relationships);
     const avgRelScore =
       relEntries.length > 0
         ? relEntries.reduce((sum, [, r]) => sum + relationshipScore(r), 0) / relEntries.length
         : 50;
 
-    // 6. Utility AI decision
     const oppUtility = opportunitiesToUtility(n.activeOpportunity);
     const { action } = computeUtilityDecision(
       {
@@ -179,7 +166,6 @@ export function simulateTick(input: TickInput): TickOutput {
       rng,
     );
 
-    // 7. Apply action to state
     n = {
       ...n,
       needs: applyActionNeedsImpact(n.needs, action),
@@ -188,7 +174,6 @@ export function simulateTick(input: TickInput): TickOutput {
       location: resolveLocation(action, phase),
     };
 
-    // 8. Stress update (reduced world pressure multiplier: 4 instead of 8)
     const newStress = applyActionStressImpact(n.stress, action);
     const structuralStress = stressFromState({
       needs: n.needs,
@@ -197,31 +182,24 @@ export function simulateTick(input: TickInput): TickOutput {
     });
     n = { ...n, stress: clampStat(Math.round(newStress * 0.7 + structuralStress * 0.3 + worldPressure * 4)) };
 
-    // 9. Economy
     if (action === "work") n = { ...n, money: n.money + n.salary };
     if (action === "eat")  n = { ...n, money: n.money - n.expenses };
     if (phase === RENT_PHASE) n = { ...n, money: n.money - n.rent };
 
-    // 10. Mood update
     const prevMood = n.mood;
     n = { ...n, mood: estimateMood(n.needs, n.stress) };
-
-    // 11. Update lastMajorEvent
     n = { ...n, lastMajorEvent: computeLastMajorEvent(n, nameSeed) };
 
-    // 12. Opportunity acceptance
     const { npc: nAfterOpp, event: oppEvent } = tryAcceptOpportunity(n, action, phase, rng, day);
     n = nAfterOpp;
     if (oppEvent) events.push(oppEvent);
 
-    // 13. Relationship evolution
     if (action === "socialize" && relEntries.length > 0) {
       const targetIdx = Math.floor(rng.next() * relEntries.length);
       const [targetId, targetRel] = relEntries[targetIdx];
       const updated = applySocialBoost(targetRel, rng.next() * 2);
       n = { ...n, relationships: { ...n.relationships, [targetId]: updated } };
 
-      // Emit a named relationship event occasionally
       if (chance(0.35, rng)) {
         const targetName = npcNames[targetId] ?? targetId;
         events.push({
@@ -242,7 +220,6 @@ export function simulateTick(input: TickInput): TickOutput {
       n = { ...n, relationships: degraded };
     }
 
-    // 14. Consequences — every rolled consequence now applies real state changes.
     const consequences = rollConsequences(
       {
         stress: n.stress,
@@ -338,20 +315,17 @@ export function simulateTick(input: TickInput): TickOutput {
       events.push(buildEvent({ id: `${n.id}-regret-${tickCount}`, name: n.name, regret: true, ...evtBase }));
     }
 
-    // 15. Opportunity spawn
     const newOpp = maybeSpawnOpportunity(n, day, world, rng);
     if (newOpp) {
       n = { ...n, activeOpportunity: newOpp };
       events.push(buildEvent({ id: `${n.id}-opp-${tickCount}`, name: n.name, opportunityTitle: newOpp.title, ...evtBase }));
     }
 
-    // 16. Routine action events (throttled, role-specific, deduplicated)
     if (shouldEmitAction(npcIdx) && (action === "work" || action === "socialize")) {
       const text = buildFeedLine(n.name, n.role, action, nameSeed);
       events.push({ id: `${n.id}-act-${tickCount}`, kind: action === "work" ? "work" : "social", text, day, phase });
     }
 
-    // 17. Mood shift events (only meaningful transitions)
     if (prevMood !== n.mood && (n.mood === "stressed" || n.mood === "content" || n.mood === "hopeful")) {
       const moodText =
         n.mood === "stressed"  ? `${n.name}'s mood darkened — pressure is building` :
@@ -360,7 +334,6 @@ export function simulateTick(input: TickInput): TickOutput {
       events.push({ id: `${n.id}-mood-${tickCount}`, kind: "mood", text: moodText, day, phase });
     }
 
-    // 18. Financial stress event (rare)
     if (n.money < 0 && rng.next() < 0.10) {
       n = addMemory(n, { type: "financialStress", text: "Running out of money.", day, impact: 8 });
       events.push({ id: `${n.id}-fin-${tickCount}`, kind: "mood", text: `${n.name} is under financial pressure`, day, phase });

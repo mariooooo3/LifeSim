@@ -3,6 +3,7 @@ import type { PlayerProfile, PlayerState } from "@/store/useLifeSimStore";
 interface Props {
   player: PlayerProfile;
   state: PlayerState | null;
+  onClick?: () => void;
 }
 
 const STAT_CONFIG = [
@@ -12,7 +13,7 @@ const STAT_CONFIG = [
   { key: "social", label: "Social",  color: "var(--warm)" },
 ] as const;
 
-export function PlayerCard({ player, state }: Props) {
+export function PlayerCard({ player, state, onClick }: Props) {
   const initials = player.name
     .split(" ")
     .map((w) => w[0])
@@ -22,10 +23,11 @@ export function PlayerCard({ player, state }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Identity */}
-      <div className="glass rounded-2xl p-4 space-y-3">
+      <div
+        className={`glass rounded-2xl p-4 space-y-3 ${onClick ? "cursor-pointer transition-colors hover:bg-foreground/[0.03]" : ""}`}
+        onClick={onClick}
+      >
         <div className="flex items-center gap-3">
-          {/* Avatar — gold star ring to distinguish from NPCs */}
           <div
             className="flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold text-black shrink-0"
             style={{
@@ -58,7 +60,6 @@ export function PlayerCard({ player, state }: Props) {
         )}
       </div>
 
-      {/* Stats */}
       {state && (
         <div className="glass rounded-2xl p-4 space-y-3">
           <div className="label">Your stats</div>

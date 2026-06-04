@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { NPC } from "@/lib/simulation/types";
 import { fetchNarrationVariants } from "@/lib/llm/narrateNPCs";
-import { situationOf, type Situation } from "@/lib/llm/situation";
+import { situationOf, situationOfPlayer, type Situation } from "@/lib/llm/situation";
 import type { WorldSeed } from "@/lib/simulation/worldSeed";
 import type { DayPhase } from "@/lib/simulation/constants";
 import type { SimEvent } from "@/lib/simulation/eventBuilder";
@@ -42,8 +42,6 @@ export interface PlayerState {
   location: string; // district: Home | Office | Café | Park | Bar
 }
 
-// ---------------------------------------------------------------------------
-
 const PLAYER_LOCATION_BY_PHASE: Record<string, string> = {
   earlyMorning: "Home",
   lateMorning:  "Office",
@@ -75,11 +73,6 @@ function tickPlayerState(prev: PlayerState, phase: string, worldPressure: number
     location: loc,
   };
 }
-
-// ---------------------------------------------------------------------------
-// Narration bucket persistence — situation-key → variant pool. Persisting it
-// means a refresh (or a returning player) reuses already-paid narrations: the
-// warm-up cost is paid once, then clicks are free.
 
 const BUCKETS_STORAGE_KEY = "lifesim.narrationBuckets";
 
@@ -139,6 +132,7 @@ interface LifeSimState {
   stopSimulation: () => void;
   setSpeed: (speed: number) => void;
   tick: () => void;
+  skipToEnd: () => void;
   selectNpc: (id: string | null) => void;
 }
 
@@ -256,9 +250,6 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
     const { _timerHandle, speed } = get();
     if (_timerHandle) clearInterval(_timerHandle);
 
-    // Mark running first so the UI responds immediately, then fire one tick
-    // so NPCs react the moment the player presses Play — no waiting for the
-    // first interval to elapse.
     set({ isRunning: true });
     get().tick();
 
@@ -378,27 +369,29 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
     });
   },
 
-  // Narrate the whole current cast in ONE batched LLM call. Triggered lazily
-  // when the player opens a detail panel: the first click narrates everyone
-  // for this moment, so every other NPC opened in the same phase is free.
-  //
-  // Only *distinct, uncached* situations are sent — so at scale this is bounded
-  // by how many distinct situations the visible cast occupies, not by the
-  // population. Re-opens, same-situation NPCs, and returning runs (persisted)
-  // all hit the cache for zero tokens. No proactive pre-generation.
   narrateCurrentCast: async () => {
-    const { npcs, phaseIndex, worldSeed, narrationBuckets, pendingKeys } = get();
+    const { npcs, phaseIndex, worldSeed, narrationBuckets, pendingKeys, player, playerState } = get();
     if (!worldSeed || npcs.length === 0) return;
 
     const phase = DAY_PHASES[phaseIndex] as DayPhase;
-    const seen = new Set<string>();
-    const missing: Situation[] = [];
+    const counts: Record<string, number> = {};
+    const distinct: Record<string, Situation> = {};
+
     for (const npc of npcs) {
       const sit = situationOf(npc, phase);
-      if (narrationBuckets[sit.key] || pendingKeys.includes(sit.key) || seen.has(sit.key)) continue;
-      seen.add(sit.key);
-      missing.push(sit);
+      counts[sit.key] = (counts[sit.key] ?? 0) + 1;
+      distinct[sit.key] = sit;
     }
+
+    if (player && playerState) {
+      const sit = situationOfPlayer(player, playerState, phase);
+      counts[sit.key] = (counts[sit.key] ?? 0) + 1;
+      distinct[sit.key] = sit;
+    }
+
+    const missing = Object.values(distinct).filter(
+      (s) => !narrationBuckets[s.key] && !pendingKeys.includes(s.key),
+    );
     if (missing.length === 0) return;
 
     const keys = missing.map((s) => s.key);
@@ -408,6 +401,7 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
         day: get().day,
         phase,
         situations: missing,
+        counts,
         worldSeed,
         worldPressure: get().worldPressure,
       });
@@ -419,6 +413,74 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
     } catch {
       set((s) => ({ pendingKeys: s.pendingKeys.filter((k) => !keys.includes(k)) }));
     }
+  },
+
+  skipToEnd: () => {
+    const { _timerHandle, worldSeed, runEnded, worldEventSchedule } = get();
+    if (!worldSeed || runEnded) return;
+    if (_timerHandle) clearInterval(_timerHandle);
+
+    let { npcs, day, phaseIndex, worldPressure, tickCount, playerState, player } = get();
+
+    const MAX_TICKS = DAYS_PER_WEEK * PHASES_PER_DAY + 1;
+    let iterations = 0;
+
+    while (iterations < MAX_TICKS) {
+      const phase = DAY_PHASES[phaseIndex] as DayPhase;
+
+      let worldEffects = undefined;
+      if (phaseIndex === 0) {
+        const storyEvent = eventForDay(worldEventSchedule, day);
+        worldEffects = storyEvent?.npcEffects;
+      }
+
+      const { npcs: updatedNpcs } = simulateTick({
+        npcs,
+        day,
+        phase,
+        worldPressure,
+        world: worldSeed,
+        tickCount,
+        worldEffects,
+      });
+
+      const nextPhaseIndex = (phaseIndex + 1) % PHASES_PER_DAY;
+      const nextDay = nextPhaseIndex === 0 ? day + 1 : day;
+
+      if (nextPhaseIndex === 0) {
+        const storyEvent = eventForDay(worldEventSchedule, nextDay);
+        if (storyEvent) {
+          worldPressure = clampPressure(worldPressure + storyEvent.pressureDelta);
+        }
+      }
+
+      if (playerState && player) {
+        playerState = tickPlayerState(playerState, phase, worldPressure);
+      }
+
+      npcs = updatedNpcs;
+      phaseIndex = nextPhaseIndex;
+      day = nextDay;
+      tickCount++;
+      iterations++;
+
+      if (day > DAYS_PER_WEEK && phaseIndex === 0) break;
+    }
+
+    set({
+      npcs,
+      day: DAYS_PER_WEEK,
+      phaseIndex: PHASES_PER_DAY - 1,
+      worldPressure,
+      worldEvent: "The week is over.",
+      tickCount,
+      playerState,
+      isRunning: false,
+      _timerHandle: null,
+      runEnded: true,
+    });
+
+    void get().triggerEndSummary();
   },
 
   selectNpc: (id) => set({ selectedNpcId: id }),
