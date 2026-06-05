@@ -2,10 +2,6 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three-stdlib";
 
-
-
-
-
 export interface GlobePin {
   id: string;
   lat: number;
@@ -38,14 +34,11 @@ const CLOUD_TEX = "https://threejs.org/examples/textures/planets/earth_clouds_10
 export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
 
-
   const pinsRef = useRef(pins);
   const onSelectRef = useRef(onSelect);
   const selectedIdRef = useRef(selectedId);
   pinsRef.current = pins;
   onSelectRef.current = onSelect;
-
-
 
   const flyToSelectedRef = useRef<string | null>(null);
   useEffect(() => {
@@ -62,11 +55,8 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     const width = mount.clientWidth || 1;
     const height = mount.clientHeight || 1;
 
-
-
     const cityList = pinsRef.current;
     const cityIds = cityList.map((p) => p.id);
-
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -76,11 +66,9 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     mount.appendChild(renderer.domElement);
 
-
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 2000);
     camera.position.set(0, 0.5, 5.8);
-
 
     const sun = new THREE.DirectionalLight(0xfff1d6, 1.6);
     sun.position.set(-5, 2, 4);
@@ -96,7 +84,6 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
 
     scene.add(new THREE.HemisphereLight(0xbcd4ff, 0x6a4a2a, 0.8));
     scene.add(new THREE.AmbientLight(0xffffff, 0.45));
-
 
     const bgGeo = new THREE.SphereGeometry(900, 32, 32);
     const bgMat = new THREE.ShaderMaterial({
@@ -136,7 +123,6 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     });
     scene.add(new THREE.Mesh(bgGeo, bgMat));
 
-
     const starGeo = new THREE.BufferGeometry();
     const starCount = 3500;
     const starPos = new Float32Array(starCount * 3);
@@ -167,7 +153,6 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     });
     scene.add(new THREE.Points(starGeo, starMat));
 
-
     const loader = new THREE.TextureLoader();
     loader.setCrossOrigin("anonymous");
     const earthDay = loader.load(EARTH_TEX);
@@ -191,7 +176,6 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     earth.rotation.y = 2.5;
     scene.add(earth);
 
-
     const cloudGeo = new THREE.SphereGeometry(EARTH_R * 1.012, 96, 96);
     const cloudMat = new THREE.MeshLambertMaterial({
       map: cloudTex,
@@ -201,7 +185,6 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     });
     const clouds = new THREE.Mesh(cloudGeo, cloudMat);
     earth.add(clouds);
-
 
     const atmGeo = new THREE.SphereGeometry(EARTH_R * 1.18, 96, 96);
     const atmMat = new THREE.ShaderMaterial({
@@ -238,7 +221,6 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
       `,
     });
     scene.add(new THREE.Mesh(atmGeo, atmMat));
-
 
     const cityGeo = new THREE.BufferGeometry();
     const cityPos = new Float32Array(cityList.length * 3);
@@ -313,7 +295,6 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     const cityPoints = new THREE.Points(cityGeo, cityMat);
     earth.add(cityPoints);
 
-
     type Fly = {
       active: boolean;
       t: number;
@@ -335,7 +316,6 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     const easeInOutCubic = (x: number) =>
       x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 
-
     const startFlyTo = (targetWorld: THREE.Vector3) => {
       userInteracting = true;
       controls.autoRotate = false;
@@ -350,7 +330,6 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
       fly.toTarget.copy(targetWorld);
       controls.enabled = false;
     };
-
 
     const raycaster = new THREE.Raycaster();
     raycaster.params.Points = { threshold: 0.035 };
@@ -394,7 +373,6 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     renderer.domElement.addEventListener("pointerup", onPointerUp);
     renderer.domElement.style.cursor = "grab";
 
-
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.12;   
@@ -424,7 +402,6 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     renderer.domElement.addEventListener("pointermove", onPointerMoveMaybeDrag);
     renderer.domElement.addEventListener("wheel", pauseAuto, { passive: true });
 
-
     const onResize = () => {
       const w = mount.clientWidth;
       const h = mount.clientHeight;
@@ -436,7 +413,6 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     const ro = new ResizeObserver(onResize);
     ro.observe(mount);
 
-
     const clock = new THREE.Clock();
     let raf = 0;
     const tick = () => {
@@ -445,7 +421,6 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
       clouds.rotation.y += dt * 0.008;
       cityMat.uniforms.uTime.value = t;
       cityMat.uniforms.uCamPos.value.copy(camera.position);
-
 
       const flyId = flyToSelectedRef.current;
       if (flyId) {
@@ -512,7 +487,6 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
         mount.removeChild(renderer.domElement);
       }
     };
-
 
   }, []);
 

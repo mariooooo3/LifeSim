@@ -1,14 +1,6 @@
 import type { CultureRegion } from "./regions";
 
-
-
-
-
-
 type NamePool = { first: string[]; last: string[] };
-
-
-
 
 const POOLS: Record<string, NamePool> = {
   japan: {
@@ -145,7 +137,6 @@ const POOLS: Record<string, NamePool> = {
   },
 };
 
-
 const REGION_POOL: Record<CultureRegion, string> = {
   japan:          "japan",
   korea:          "korea",
@@ -164,7 +155,6 @@ const REGION_POOL: Record<CultureRegion, string> = {
   southeast_asian:"southeast_asian",
   anglophone:     "anglophone",
 };
-
 
 const CITY_POOL_OVERRIDE: Record<string, string> = {
 
@@ -185,9 +175,6 @@ const CITY_POOL_OVERRIDE: Record<string, string> = {
   "c-iasi":      "romanian",
   "c-timisoara": "romanian",
 };
-
-
-
 
 function seededShuffle<T>(arr: T[], seed: number): T[] {
   const out = [...arr];

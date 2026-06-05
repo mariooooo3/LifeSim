@@ -2,12 +2,7 @@ import type { DayPhase } from "./constants";
 
 export type SimAction = "sleep" | "work" | "eat" | "socialize" | "relax";
 
-
-
-
-
 export type NarrationKey = `${string}_${number}_${DayPhase}`;
-export type NarrationCache = Record<NarrationKey, string>;
 
 export function makeNarrationKey(
   npcId: string,
@@ -32,7 +27,8 @@ export type MemoryType =
   | "conflict"
   | "gotHelp"
   | "success"
-  | "financialStress";
+  | "financialStress"
+  | "witnessed";
 
 export type OpportunityType =
   | "jobOffer"

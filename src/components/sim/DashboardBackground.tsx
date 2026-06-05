@@ -1,24 +1,6 @@
 import { useMemo } from "react";
 import type { DayPhase } from "@/lib/simulation/constants";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 type TimeOfDay = "morning" | "noon" | "evening" | "night";
 
 function phaseToTimeOfDay(phase: DayPhase): TimeOfDay {
@@ -37,9 +19,6 @@ function phaseToTimeOfDay(phase: DayPhase): TimeOfDay {
       return "night";
   }
 }
-
-
-
 
 function generateSkyline(seed: number, count: number, maxH: number) {
   const rng = (i: number) => {
@@ -114,10 +93,6 @@ function SkylineLayer({
   );
 }
 
-
-
-
-
 const CAR_LANES = [
   { y: 3,  dur: 18, delay: 0,  scale: 0.80, dir:  1, type: "sedan" },
   { y: 8,  dur: 22, delay: 7,  scale: 0.90, dir:  1, type: "suv"   },
@@ -171,9 +146,6 @@ function MovingCars() {
   );
 }
 
-
-
-
 interface Props {
   phase: DayPhase;
 }
@@ -196,21 +168,16 @@ export function DashboardBackground({ phase }: Props) {
         }}
       />
 
-
       <div className="ls-stars absolute inset-0" />
-
 
       <div className="ls-celestial absolute" />
 
-
       <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-[linear-gradient(180deg,transparent_0%,var(--ls-haze)_100%)]" />
-
 
       <div className="absolute bottom-0 left-0 right-0">
         <SkylineLayer seed={1} count={26} maxHeight={180} fillVar="--ls-bldg-far"  windowVar="--ls-win-far"  className="opacity-90" />
         <SkylineLayer seed={7} count={22} maxHeight={240} fillVar="--ls-bldg-mid"  windowVar="--ls-win-mid"  litWindows className="opacity-95" />
         <SkylineLayer seed={3} count={16} maxHeight={300} fillVar="--ls-bldg-near" windowVar="--ls-win-near" litWindows />
-
 
         <svg viewBox="0 0 1000 60" preserveAspectRatio="xMidYMax slice" className="absolute bottom-0 left-0 w-full" style={{ height: 60 }}>
           {Array.from({ length: 14 }).map((_, i) => {
@@ -228,7 +195,6 @@ export function DashboardBackground({ phase }: Props) {
 
         <MovingCars />
       </div>
-
 
       <div className="absolute inset-0 mix-blend-overlay" style={{ background: "var(--ls-tint)", transition: "background 2.5s ease" }} />
     </div>

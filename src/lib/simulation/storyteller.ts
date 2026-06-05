@@ -3,17 +3,6 @@ import type { WorldEffects } from "./tick";
 import type { WorldSeed } from "./worldSeed";
 import { createSeededRng, type Rng } from "./randomness";
 
-
-
-
-
-
-
-
-
-
-
-
 export type EventCategory = "economic" | "weather" | "social" | "civic";
 
 type WorldParamKey =
@@ -30,7 +19,8 @@ export interface WorldEvent {
   category: EventCategory;
   pressureDelta: number;
   feedText: string;
-  npcEffects?: WorldEffects; 
+  npcEffects?: WorldEffects;
+  waveTail?: number; // carry-forward decay factor (0.0–1.0)
 }
 
 interface WorldEventDef {
@@ -41,13 +31,8 @@ interface WorldEventDef {
   npcEffects?: WorldEffects;
   baseWeight: number;
 
-
-
   affinities?: Partial<Record<WorldParamKey, number>>;
 }
-
-
-
 
 const EVENT_DEFS: WorldEventDef[] = [
 
@@ -124,8 +109,6 @@ const EVENT_DEFS: WorldEventDef[] = [
     affinities: { opportunityDensity: 2.5, workCulture: 1.0 },
   },
 
-
-
   {
     title: "Cold snap",
     category: "weather",
@@ -175,7 +158,6 @@ const EVENT_DEFS: WorldEventDef[] = [
     npcEffects: { socialBoost: +5 },
     baseWeight: 3,
   },
-
 
   {
     title: "Local festival",
@@ -240,7 +222,6 @@ const EVENT_DEFS: WorldEventDef[] = [
     baseWeight: 3,
     affinities: { socialIntensity: 2.5 },
   },
-
 
   {
     title: "Transit strike",
@@ -315,8 +296,12 @@ const EVENT_DEFS: WorldEventDef[] = [
   },
 ];
 
-
-
+function computeWaveTail(pressureDelta: number): number {
+  const abs = Math.abs(pressureDelta);
+  if (abs >= 0.10) return 0.5;
+  if (abs >= 0.06) return 0.3;
+  return 0;
+}
 
 function effectiveWeight(e: WorldEventDef, world: WorldSeed): number {
   let w = e.baseWeight;
@@ -339,9 +324,6 @@ function weightedPick<T>(items: Array<[T, number]>, rng: Rng): T {
   return items[items.length - 1][0];
 }
 
-
-
-
 export function buildWorldEventSchedule(world: WorldSeed, days: number): WorldEvent[] {
   const rng = createSeededRng((world.seed ^ 0x57_01_4e_5d) >>> 0);
   const schedule: WorldEvent[] = [];
@@ -349,8 +331,6 @@ export function buildWorldEventSchedule(world: WorldSeed, days: number): WorldEv
   const usedTitles = new Set<string>();
 
   for (let day = 1; day <= days; day++) {
-
-
 
     let candidates = EVENT_DEFS.filter(
       (e) => e.category !== lastCategory && !usedTitles.has(e.title),
@@ -371,6 +351,7 @@ export function buildWorldEventSchedule(world: WorldSeed, days: number): WorldEv
       pressureDelta: picked.pressureDelta,
       feedText: picked.feedText,
       npcEffects: picked.npcEffects,
+      waveTail: computeWaveTail(picked.pressureDelta),
     });
     lastCategory = picked.category;
     usedTitles.add(picked.title);
@@ -378,7 +359,6 @@ export function buildWorldEventSchedule(world: WorldSeed, days: number): WorldEv
 
   return schedule;
 }
-
 
 export function eventForDay(schedule: WorldEvent[], day: number): WorldEvent | null {
   if (day < 1 || day > schedule.length) return null;
@@ -388,9 +368,6 @@ export function eventForDay(schedule: WorldEvent[], day: number): WorldEvent | n
 export function clampPressure(p: number): number {
   return Math.max(0.05, Math.min(0.90, p));
 }
-
-
-
 
 const MIDDAY_HINTS = [
   "Midweek pressure building across the city.",

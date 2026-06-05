@@ -1,30 +1,18 @@
 export interface WorldSeed {
   regionId: string;
-
-
-
-
   cityBase: number;
-
-
-
-
   runSeed: number;
-
-
-
   seed: number;
 
   lat: number;
   lng: number;
 
-
-  economicPressure: number;   
-  socialIntensity: number;    
-  workCulture: number;        
-  opportunityDensity: number; 
-  stressLevel: number;        
-  paceOfLife: number;         
+  economicPressure: number;
+  socialIntensity: number;
+  workCulture: number;
+  opportunityDensity: number;
+  stressLevel: number;
+  paceOfLife: number;
 }
 
 function hashStr(s: string): number {
@@ -39,8 +27,6 @@ function hashStr(s: string): number {
 function channel(base: number, offset: number): number {
   return ((base * (offset | 1)) >>> 0) / 0xffffffff;
 }
-
-
 
 function mixRun(cityBase: number, runSeed: number): number {
   return (cityBase ^ ((runSeed * 1664525 + 1013904223) >>> 0)) >>> 0;

@@ -1,6 +1,3 @@
-
-
-
 export type Mood = "calm" | "focused" | "stressed" | "content" | "restless" | "hopeful";
 
 export interface NpcSummary {
@@ -63,8 +60,6 @@ export const feed: FeedEvent[] = [
   { id: "e7", time: "13:54", text: "Theo received a message from a venue", kind: "social" },
   { id: "e8", time: "13:47", text: "Lena began her shift at the hospital", kind: "work" },
 ];
-
-
 
 export interface Region {
   id: string;

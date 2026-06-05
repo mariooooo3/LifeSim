@@ -1,5 +1,4 @@
-import { weightedProbability } from "./probabilities";
-import { rollProbability } from "./probabilities";
+import { weightedProbability, rollProbability } from "./probabilities";
 import type { Rng } from "./randomness";
 
 export interface ConsequenceContext {

@@ -1,10 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 
-
-
-
-
-
 const prefersReducedMotion = () =>
   typeof window !== "undefined" &&
   window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -31,7 +26,6 @@ export function Typewriter({ text, speed = 18, caret = true, className }: Props)
     let i = 0;
     let last = performance.now();
     const tick = (now: number) => {
-
 
       const steps = Math.floor((now - last) / speed);
       if (steps > 0) {

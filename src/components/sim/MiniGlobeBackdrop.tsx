@@ -1,20 +1,5 @@
 import { useId } from "react";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 interface Props {
   size?: number;
   opacity?: number;
@@ -26,8 +11,6 @@ export function MiniGlobeBackdrop({ size = 480, opacity = 0.16, style }: Props) 
   const uid = useId().replace(/:/g, "");
   const r   = size / 2;
 
-
-
   const lats = [-60, -30, 0, 30, 60].map((deg) => {
     const rad = (deg * Math.PI) / 180;
     return {
@@ -36,7 +19,6 @@ export function MiniGlobeBackdrop({ size = 480, opacity = 0.16, style }: Props) 
       ry: Math.cos(rad) * r * 0.11,
     };
   });
-
 
   const meridians = [30, 60, 90, 120, 150].map((lon) => ({
     rx: Math.sin((lon * Math.PI) / 180) * r * 0.995,
@@ -67,7 +49,6 @@ export function MiniGlobeBackdrop({ size = 480, opacity = 0.16, style }: Props) 
           pointerEvents: "none",
         }}
       />
-
 
       <div
         style={{
@@ -120,7 +101,6 @@ export function MiniGlobeBackdrop({ size = 480, opacity = 0.16, style }: Props) 
           </g>
         </svg>
 
-
         <div
           style={{
             position: "absolute",
@@ -134,7 +114,6 @@ export function MiniGlobeBackdrop({ size = 480, opacity = 0.16, style }: Props) 
             filter: `blur(${Math.round(size * 0.05)}px)`,
           }}
         />
-
 
         <div
           style={{

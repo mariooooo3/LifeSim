@@ -10,6 +10,7 @@ export type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
 
 export interface Situation {
   key: string;
+  flavorKey: string;
   role: string;
   action: string;
   location: string;
@@ -21,13 +22,11 @@ export interface Situation {
 
   trait: HiddenTrait;
   traitPhrase: string;
-  topMemory: string | null;        
-  topMemoryType: string;           
+  topMemory: string | null;
+  topMemoryType: string;
   opportunityTitle: string | null;
-  opportunityType: string;         
+  opportunityType: string;
 }
-
-
 
 export const TRAIT_PHRASE: Record<HiddenTrait, string> = {
   fearOfFailure:   "quietly afraid of falling short",
@@ -58,6 +57,19 @@ function energyBand(e: number): EnergyBand {
   return "fresh";
 }
 
+function roleCategory(role: string): string {
+  const r = role.toLowerCase();
+  if (/engineer|developer|analyst|lawyer|accountant|consultant|manager|director|executive/.test(r)) return "professional";
+  if (/artist|designer|musician|writer|photographer|filmmaker|illustrator/.test(r)) return "creative";
+  if (/teacher|nurse|doctor|therapist|counselor|caregiver|social worker/.test(r)) return "caregiver";
+  if (/student|intern/.test(r)) return "student";
+  return "service";
+}
+
+function makeFlavorKey(roleCat: string, trait: HiddenTrait, timeOfDay: TimeOfDay, mBand: MoneyBand): string {
+  return `${roleCat}_${trait}_${timeOfDay}_${mBand}`;
+}
+
 export function situationOf(npc: NPC, phase: DayPhase): Situation {
   const timeOfDay = toSimPhase(phase) as TimeOfDay;
   const sBand = stressBand(npc.stress);
@@ -67,6 +79,8 @@ export function situationOf(npc: NPC, phase: DayPhase): Situation {
   const opp = npc.activeOpportunity && !npc.activeOpportunity.resolved ? npc.activeOpportunity : null;
 
   const mem = npc.memories.length > 0 ? npc.memories[0] : null;
+
+  const flavorKey = makeFlavorKey(roleCategory(npc.role), npc.personality.hiddenTrait, timeOfDay, mBand);
 
   const key = [
     npc.role,
@@ -79,10 +93,12 @@ export function situationOf(npc: NPC, phase: DayPhase): Situation {
     npc.personality.hiddenTrait,
     opp ? opp.type : "_",
     mem ? mem.type : "_",
+    flavorKey,
   ].join("|");
 
   return {
     key,
+    flavorKey,
     role: npc.role,
     action: npc.currentAction,
     location: npc.location,
@@ -225,7 +241,6 @@ function stateLines(sit: Situation): string[] {
   ];
 }
 
-
 function memoryClause(type: string): string | null {
   switch (type) {
     case "success":          return "still buoyed by a recent win";
@@ -233,6 +248,7 @@ function memoryClause(type: string): string | null {
     case "financialStress":  return "money worries lingering underneath";
     case "missedOpportunity":return "a missed chance still nagging";
     case "gotHelp":          return "quietly grateful for help received";
+    case "witnessed":        return "carrying something that happened to someone close";
     default:                 return null;
   }
 }
@@ -249,8 +265,6 @@ export function fallbackVariants(sit: Situation, count: number): string[] {
   const out: string[] = [];
   for (let i = 0; i < count; i++) {
     const a = actions[(seed + i) % actions.length];
-
-
 
     const trait = `Still ${sit.traitPhrase}.`;
     const state = states[(seed + i) % states.length];
@@ -289,8 +303,11 @@ export function situationOfPlayer(
   const mood = moodLabel(state.mood);
   const trait: HiddenTrait = "approvalSeeking";
 
+  const roleCat = player.professionArchetype ?? "service";
+  const flavorKey = makeFlavorKey(roleCat, trait, timeOfDay, mBand);
+
   const key = [
-    player.professionArchetype ?? "creative",
+    roleCat,
     action,
     timeOfDay,
     sBand,
@@ -300,10 +317,12 @@ export function situationOfPlayer(
     trait,
     "_",
     "_",
+    flavorKey,
   ].join("|");
 
   return {
     key,
+    flavorKey,
     role: player.professionTitle || player.archetype,
     action,
     location: state.location,

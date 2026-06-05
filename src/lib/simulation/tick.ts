@@ -116,6 +116,7 @@ export function simulateTick(input: TickInput): TickOutput {
 
   const events: SimEvent[] = [];
   const updatedNpcs: NPC[] = [];
+  const echoTriggers: Array<{ npcId: string; npcName: string; memory: Memory }> = [];
 
   const shouldEmitAction = (npcIdx: number) => (npcIdx + tickCount) % 3 === 0;
 
@@ -238,7 +239,9 @@ export function simulateTick(input: TickInput): TickOutput {
         needs: { ...n.needs, energy: clampStat(n.needs.energy - 22) },
         lastMajorEvent: "Hit a wall — burned out",
       };
-      n = addMemory(n, { type: "conflict", text: "Crashed into burnout.", day, impact: 9 });
+      const burnoutMem: Memory = { type: "conflict", text: "Crashed into burnout.", day, impact: 9 };
+      n = addMemory(n, burnoutMem);
+      echoTriggers.push({ npcId: n.id, npcName: n.name, memory: burnoutMem });
       events.push(buildEvent({ id: `${n.id}-burnout-${tickCount}`, name: n.name, burnout: true, ...evtBase }));
     }
 
@@ -335,12 +338,42 @@ export function simulateTick(input: TickInput): TickOutput {
     }
 
     if (n.money < 0 && rng.next() < 0.10) {
-      n = addMemory(n, { type: "financialStress", text: "Running out of money.", day, impact: 8 });
+      const finMem: Memory = { type: "financialStress", text: "Running out of money.", day, impact: 8 };
+      n = addMemory(n, finMem);
+      echoTriggers.push({ npcId: n.id, npcName: n.name, memory: finMem });
       events.push({ id: `${n.id}-fin-${tickCount}`, kind: "mood", text: `${n.name} is under financial pressure`, day, phase });
       n = { ...n, lastMajorEvent: "Struggling financially" };
     }
 
     updatedNpcs.push(n);
+  }
+
+  // Memory echo propagation: faded awareness spreads to close relationships
+  if (echoTriggers.length > 0) {
+    const npcIndex = new Map<string, number>(updatedNpcs.map((n, i) => [n.id, i]));
+    for (const { npcId, npcName, memory } of echoTriggers) {
+      const srcIdx = npcIndex.get(npcId);
+      if (srcIdx === undefined) continue;
+      const srcNpc = updatedNpcs[srcIdx];
+      for (const [targetId, rel] of Object.entries(srcNpc.relationships)) {
+        if (rel.affinity <= 35) continue;
+        const echoImpact = Math.round(memory.impact * (rel.affinity / 100) * 0.4);
+        if (echoImpact < 2) continue;
+        const targetIdx = npcIndex.get(targetId);
+        if (targetIdx === undefined) continue;
+        const echoText =
+          memory.type === "conflict"        ? `${npcName} is burning out nearby` :
+          memory.type === "financialStress"  ? `${npcName} is under money pressure` :
+          memory.type === "success"          ? `${npcName} just had a real win` :
+                                               `Something shifted for ${npcName}`;
+        updatedNpcs[targetIdx] = addMemory(updatedNpcs[targetIdx], {
+          type: "witnessed",
+          text: echoText,
+          impact: echoImpact,
+          day,
+        });
+      }
+    }
   }
 
   return { npcs: updatedNpcs, events };

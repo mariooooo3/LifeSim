@@ -1,17 +1,5 @@
 import { useEffect, useRef } from "react";
 
-
-
-
-
-
-
-
-
-
-
-
-
 interface Props {
   count?: number;
   opacity?: number;
@@ -26,7 +14,6 @@ export function StarfieldLayer({ count = 200, opacity = 0.55, speed = 1 }: Props
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
 
     const stars = Array.from({ length: count }, () => ({
       x:             Math.random(),

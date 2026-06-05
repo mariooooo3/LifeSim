@@ -21,7 +21,7 @@ Each NPC is generated from a city seed and carries:
 - **Identity:** culture-specific name, role (26 options weighted by city), age, salary, rent
 - **Personality:** discipline, ambition, sociability, resilience + a hidden trait (fearOfFailure / jealous / insecure / riskSeeking / approvalSeeking) that colors every narration
 - **State:** stress, money, energy, social, fun — updated every phase
-- **Memory:** up to 5 defining moments (success, conflict, missed opportunity, financial stress…), sorted by impact score
+- **Memory:** up to 5 defining moments (success, conflict, missed opportunity, financial stress…), sorted by impact score. High-impact events propagate a faded echo to connected NPCs weighted by affinity.
 - **Relationships:** affinity + trust with each other NPC, evolving through socializing and stress
 - **Opportunities:** job offers, party invites, risky investments — spawn, age out, or get accepted based on current action alignment
 
@@ -44,7 +44,9 @@ No scripts. No branching trees. Drama is a byproduct of the simulation.
 
 Narration is keyed by a quantized **situation**, not by NPC identity:
 
-**role · action · time-of-day · stress-band · money-band · energy-band · mood · hidden-trait · opportunity-type · memory-type**
+**role · action · time-of-day · stress-band · money-band · energy-band · mood · hidden-trait · opportunity-type · memory-type · flavor-key**
+
+flavor-key buckets role + hidden trait + time + money into a coarse context so two NPCs with identical stats but different circumstances get distinct cached lines.
 
 Real values collapse to coarse bands (stress 73 → "stressed"), so many NPCs and many moments share the same key.
 
@@ -144,3 +146,5 @@ Cost is bounded by distinct situations — a number that saturates regardless of
 ```
 
 **Click flow:** panel opens → `narrateCurrentCast()` diffs cast against cache → one LLM call for missing keys → pools cached + persisted → `pickVariant(pool, id)` per character → all subsequent clicks in the same phase: 0 tokens.
+
+**World events:** storyteller.ts schedules ~28 seeded events per run. Each event applies npcEffects (stress, energy, social deltas) with a waveTail multiplier so pressure decays across subsequent days rather than vanishing after one tick.

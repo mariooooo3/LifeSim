@@ -7,12 +7,6 @@ import { deriveCulture, pickNames, pickRoles } from "./culture";
 import type { WorldCulture } from "./culture";
 import { resolveLocation } from "./movement";
 
-
-
-
-
-
-
 const HIDDEN_TRAITS: HiddenTrait[] = [
   "fearOfFailure",
   "jealous",
@@ -20,10 +14,6 @@ const HIDDEN_TRAITS: HiddenTrait[] = [
   "riskSeeking",
   "approvalSeeking",
 ];
-
-
-
-
 
 function deriveInitialAction(
   personality: Personality,
@@ -45,13 +35,9 @@ function deriveInitialAction(
   return "relax";
 }
 
-
-
-
 function buildPersonality(rng: Rng, seed: WorldSeed, culture: WorldCulture): Personality {
   const t        = culture.traits;
   const traitIdx = randomInt(0, HIDDEN_TRAITS.length - 1, rng);
-
 
   const discipline  = Math.round(randomBetween(20, 90, rng) * (0.5 + t.workIntensity  * 0.5));
   const sociability = Math.round(randomBetween(20, 90, rng) * (0.3 + t.socialOpenness * 0.7));
@@ -69,12 +55,8 @@ function buildPersonality(rng: Rng, seed: WorldSeed, culture: WorldCulture): Per
   };
 }
 
-
-
-
 function buildNeeds(rng: Rng, seed: WorldSeed, culture: WorldCulture) {
   const t = culture.traits;
-
 
   const social = Math.round(
     randomBetween(25, 80, rng) * (0.35 + (1 - t.loneliness) * 0.65) * (0.5 + seed.socialIntensity * 0.5)
@@ -93,12 +75,8 @@ function buildNeeds(rng: Rng, seed: WorldSeed, culture: WorldCulture) {
   };
 }
 
-
-
-
 function buildFinances(rng: Rng, seed: WorldSeed, culture: WorldCulture, personality: Personality) {
   const t        = culture.traits;
-
   const salaryMult = 1 + personality.ambition / 100 + t.luxuryLifestyle * 0.3;
   const rentMult   = 1 + seed.economicPressure + t.luxuryLifestyle * 0.4;
 
@@ -119,14 +97,9 @@ function buildFinances(rng: Rng, seed: WorldSeed, culture: WorldCulture, persona
   };
 }
 
-
-
-
 export function generateNPCs(world: WorldSeed): NPC[] {
   const rng     = createSeededRng(world.seed);
   const culture = deriveCulture(world);
-
-
   const names = pickNames(culture.region, world.regionId, world.seed, 10);
   const roles = pickRoles(culture, 10, rng);
 
@@ -140,14 +113,12 @@ export function generateNPCs(world: WorldSeed): NPC[] {
     const needs       = buildNeeds(rng, world, culture);
     const finances    = buildFinances(rng, world, culture, personality);
 
-
     const stress = Math.round(
       randomBetween(8, 38, rng)
       + world.stressLevel * 25
       + culture.traits.pace * 10
       + culture.traits.survivalPressure * 12
     );
-
 
     const relationships: Record<string, { affinity: number; trust: number }> = {};
     const relCount = randomInt(2, 3, rng);

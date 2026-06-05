@@ -3,12 +3,6 @@ import type { NPC } from "@/lib/simulation/types";
 import { currentActionLabel } from "@/lib/simulation/narrator";
 import { Avatar } from "./Avatar";
 
-
-
-
-
-
-
 interface Zone {
   key: string;        
   label: string;
@@ -27,19 +21,15 @@ const ZONES: Zone[] = [
 
 const ZONE_BY_KEY: Record<string, Zone> = Object.fromEntries(ZONES.map((z) => [z.key, z]));
 
-
 const ROADS: [number, number][] = [
   [0, 2], [1, 2], [3, 2], [4, 2], 
   [0, 1], [3, 4], [0, 3], [1, 4], 
 ];
 
-
-
 const CLUSTER: [number, number][] = [
   [0, 0], [-6, -7], [6, -7], [-9, 3], [9, 3], [0, 9],
   [-5, -13], [5, -13], [-11, -3], [11, -3], [-4, 14], [6, 13],
 ];
-
 
 function ambientFor(phaseIndex: number): {
   sky: string; ground: string; lights: number; label: string;
@@ -61,7 +51,6 @@ interface Props {
 export function CityLifeMap({ npcs, selectedNpcId, phaseIndex, onSelect, isDimmed }: Props) {
   const [hoverId, setHoverId] = useState<string | null>(null);
   const amb = ambientFor(phaseIndex);
-
 
   const placed = useMemo(() => {
     const slotCounters: Record<string, number> = {};
@@ -96,7 +85,6 @@ export function CityLifeMap({ npcs, selectedNpcId, phaseIndex, onSelect, isDimme
         aria-hidden
       />
 
-
       <svg
         className="pointer-events-none absolute inset-0 h-full w-full"
         viewBox="0 0 100 100"
@@ -115,7 +103,6 @@ export function CityLifeMap({ npcs, selectedNpcId, phaseIndex, onSelect, isDimme
           />
         ))}
       </svg>
-
 
       {ZONES.map((z) => {
         const lit = amb.lights;
@@ -146,12 +133,10 @@ export function CityLifeMap({ npcs, selectedNpcId, phaseIndex, onSelect, isDimme
         );
       })}
 
-
       <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-background/30 px-2.5 py-1 backdrop-blur-sm">
         <span className="h-1.5 w-1.5 rounded-full" style={{ background: amb.lights > 0.5 ? "var(--warm)" : "var(--calm)" }} />
         <span className="text-[10px] uppercase tracking-[0.2em] text-foreground/60">{amb.label}</span>
       </div>
-
 
       {placed.map(({ npc, x, y }) => {
         const isSelected = npc.id === selectedNpcId;
@@ -200,7 +185,6 @@ export function CityLifeMap({ npcs, selectedNpcId, phaseIndex, onSelect, isDimme
               </span>
             </div>
 
-
             {(isHover || isSelected) && (
               <div
                 className={`absolute left-1/2 z-40 w-max max-w-[160px] -translate-x-1/2 rounded-md bg-background/90 px-2 py-1 text-center shadow-lg backdrop-blur-sm ${
@@ -217,8 +201,6 @@ export function CityLifeMap({ npcs, selectedNpcId, phaseIndex, onSelect, isDimme
     </div>
   );
 }
-
-
 
 function moodColor(mood: NPC["mood"]): string {
   switch (mood) {

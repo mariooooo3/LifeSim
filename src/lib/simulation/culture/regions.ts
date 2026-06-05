@@ -1,9 +1,5 @@
 import type { WorldSeed } from "../worldSeed";
 
-
-
-
-
 export type CultureRegion =
   | "japan"
   | "korea"
@@ -51,9 +47,6 @@ export interface WorldCulture {
   tilt: CulturalTilt;
   traits: CulturalTraits;
 }
-
-
-
 
 const BASE_TRAITS: Record<CultureRegion, CulturalTraits> = {
   japan: {
@@ -154,17 +147,12 @@ const BASE_TRAITS: Record<CultureRegion, CulturalTraits> = {
   },
 };
 
-
-
-
 const CITY_REGION: Record<string, CultureRegion> = {
 
   "c-tokyo": "japan", "c-osaka": "japan", "c-kyoto": "japan",
   "c-sapporo": "japan", "c-fukuoka": "japan",
 
-
   "c-seoul": "korea", "c-busan": "korea", "c-pyongyang": "korea",
-
 
   "c-beijing": "china", "c-shanghai": "china", "c-guangzhou": "china",
   "c-hongkong": "china", "c-taipei": "china", "c-shenzhen": "china",
@@ -172,21 +160,17 @@ const CITY_REGION: Record<string, CultureRegion> = {
   "c-xian": "china", "c-nanjing": "china", "c-tianjin": "china",
   "c-ulaanbaatar": "china",
 
-
   "c-stockholm": "nordic", "c-oslo": "nordic", "c-copenhagen": "nordic",
   "c-helsinki": "nordic", "c-reykjavik": "nordic",
-
 
   "c-berlin": "germanic", "c-hamburg": "germanic", "c-munich": "germanic",
   "c-vienna": "germanic", "c-zurich": "germanic", "c-amsterdam": "germanic",
   "c-brussels": "germanic", "c-prague": "germanic", "c-budapest": "germanic",
 
-
   "c-paris": "romance_europe", "c-rome": "romance_europe", "c-milan": "romance_europe",
   "c-madrid": "romance_europe", "c-barcelona": "romance_europe",
   "c-lisbon": "romance_europe", "c-porto": "romance_europe",
   "c-athens": "romance_europe", "c-valletta": "romance_europe", "c-nicosia": "romance_europe",
-
 
   "c-warsaw": "eastern_europe", "c-bucharest": "eastern_europe",
   "c-cluj": "eastern_europe", "c-iasi": "eastern_europe", "c-timisoara": "eastern_europe",
@@ -197,9 +181,7 @@ const CITY_REGION: Record<string, CultureRegion> = {
   "c-yerevan": "eastern_europe", "c-baku": "eastern_europe",
   "c-minsk": "slavic",
 
-
   "c-moscow": "slavic", "c-stpetersburg": "slavic",
-
 
   "c-istanbul": "middle_east", "c-ankara": "middle_east",
   "c-tehran": "middle_east", "c-baghdad": "middle_east",
@@ -211,11 +193,9 @@ const CITY_REGION: Record<string, CultureRegion> = {
   "c-tripoli": "middle_east", "c-rabat": "middle_east",
   "c-khartoum": "middle_east",
 
-
   "c-dubai": "gulf", "c-abudhabi": "gulf", "c-doha": "gulf",
   "c-riyadh": "gulf", "c-jeddah": "gulf", "c-muscat": "gulf",
   "c-kuwait": "gulf", "c-manama": "gulf",
-
 
   "c-mumbai": "south_asian", "c-delhi": "south_asian", "c-bangalore": "south_asian",
   "c-kolkata": "south_asian", "c-chennai": "south_asian", "c-pune": "south_asian",
@@ -223,7 +203,6 @@ const CITY_REGION: Record<string, CultureRegion> = {
   "c-karachi": "south_asian", "c-lahore": "south_asian", "c-islamabad": "south_asian",
   "c-dhaka": "south_asian", "c-chittagong": "south_asian",
   "c-colombo": "south_asian", "c-kathmandu": "south_asian",
-
 
   "c-singapore": "southeast_asian", "c-bangkok": "southeast_asian",
   "c-hcmc": "southeast_asian", "c-jakarta": "southeast_asian",
@@ -234,7 +213,6 @@ const CITY_REGION: Record<string, CultureRegion> = {
   "c-danang": "southeast_asian", "c-vientiane": "southeast_asian",
   "c-bandarwon": "southeast_asian", "c-dili": "southeast_asian",
 
-
   "c-lagos": "africa", "c-nairobi": "africa", "c-accra": "africa",
   "c-addisababa": "africa", "c-dakar": "africa", "c-abuja": "africa",
   "c-capetown": "africa", "c-johannesburg": "africa", "c-kinshasa": "africa",
@@ -243,7 +221,6 @@ const CITY_REGION: Record<string, CultureRegion> = {
   "c-abidjan": "africa", "c-douala": "africa", "c-bamako": "africa",
   "c-conakry": "africa", "c-freetown": "africa", "c-monrovia": "africa",
   "c-antananarivo": "africa", "c-kigali": "africa", "c-bujumbura": "africa",
-
 
   "c-saopaulo": "latin_american", "c-rio": "latin_american",
   "c-buenosaires": "latin_american", "c-bogota": "latin_american",
@@ -261,7 +238,6 @@ const CITY_REGION: Record<string, CultureRegion> = {
   "c-sanjose-cr": "latin_american", "c-guayaquil": "latin_american",
   "c-portoalegre": "latin_american",
 
-
   "c-newyork": "north_american", "c-losangeles": "north_american",
   "c-chicago": "north_american", "c-houston": "north_american",
   "c-phoenix": "north_american", "c-philadelphia": "north_american",
@@ -276,7 +252,6 @@ const CITY_REGION: Record<string, CultureRegion> = {
   "c-ottawa": "north_american", "c-edmonton": "north_american",
   "c-winnipeg": "north_american",
 
-
   "c-london": "anglophone", "c-dublin": "anglophone",
   "c-edinburgh": "anglophone", "c-manchester": "anglophone",
   "c-birmingham": "anglophone", "c-glasgow": "anglophone",
@@ -285,9 +260,6 @@ const CITY_REGION: Record<string, CultureRegion> = {
   "c-brisbane": "anglophone", "c-perth": "anglophone",
   "c-auckland": "anglophone", "c-wellington": "anglophone",
 };
-
-
-
 
 function regionFromCoords(lat: number, lng: number): CultureRegion {
 
@@ -331,9 +303,6 @@ export function getCultureRegion(cityId: string, lat = 0, lng = 0): CultureRegio
   return CITY_REGION[cityId] ?? regionFromCoords(lat, lng);
 }
 
-
-
-
 function seedChannel(base: number, offset: number): number {
   return ((base * (offset | 1)) >>> 0) / 0xffffffff;
 }
@@ -347,7 +316,6 @@ function deriveTilt(seed: number): CulturalTilt {
   if (v < 0.65) return "boom";
   return "default"; 
 }
-
 
 const TILT_DELTA: Record<CulturalTilt, Partial<CulturalTraits>> = {
   default:     {},
@@ -378,15 +346,7 @@ function applyTilt(base: CulturalTraits, tilt: CulturalTilt): CulturalTraits {
   };
 }
 
-
-
-
-
 const CITY_TRAIT_DELTA: Record<string, Partial<CulturalTraits>> = {
-
-
-
-
 
   "c-bucharest": {
     ambition:         +0.10,
@@ -397,7 +357,6 @@ const CITY_TRAIT_DELTA: Record<string, Partial<CulturalTraits>> = {
     socialMobility:   +0.05,
   },
 
-
   "c-cluj": {
     creativity:       +0.15,
     artisticEnergy:   +0.14,
@@ -406,7 +365,6 @@ const CITY_TRAIT_DELTA: Record<string, Partial<CulturalTraits>> = {
     survivalPressure: -0.10,
     wealthPressure:   -0.08,
   },
-
 
   "c-iasi": {
     artisticEnergy:   +0.10,
@@ -417,7 +375,6 @@ const CITY_TRAIT_DELTA: Record<string, Partial<CulturalTraits>> = {
     wealthPressure:   +0.08,
     socialMobility:   -0.05,
   },
-
 
   "c-timisoara": {
     socialOpenness:   +0.14,
@@ -449,9 +406,6 @@ function applyCityDelta(traits: CulturalTraits, cityId: string): CulturalTraits 
     socialMobility:   clamp(traits.socialMobility   + (d.socialMobility   ?? 0)),
   };
 }
-
-
-
 
 export function deriveCulture(world: WorldSeed): WorldCulture {
   const region = getCultureRegion(world.regionId, world.lat, world.lng);

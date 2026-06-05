@@ -2,10 +2,6 @@ import type { CultureRegion, WorldCulture } from "./regions";
 import type { Rng } from "../randomness";
 import { randomInt } from "../randomness";
 
-
-
-
-
 export const ALL_ROLES = [
   "Developer", "Designer", "Architect", "Engineer", "Researcher",
   "Teacher", "Doctor", "Nurse", "Lawyer", "Journalist",
@@ -16,11 +12,6 @@ export const ALL_ROLES = [
 ] as const;
 
 export type SimRole = (typeof ALL_ROLES)[number];
-
-
-
-
-
 
 type RoleWeights = Partial<Record<SimRole, number>>;
 
@@ -123,11 +114,6 @@ const REGION_WEIGHTS: Record<CultureRegion, RoleWeights> = {
   },
 };
 
-
-
-
-
-
 function traitBonuses(culture: WorldCulture): Partial<Record<SimRole, number>> {
   const t = culture.traits;
   return {
@@ -152,9 +138,6 @@ function traitBonuses(culture: WorldCulture): Partial<Record<SimRole, number>> {
   };
 }
 
-
-
-
 function weightedPick(weights: Array<[SimRole, number]>, rng: Rng): SimRole {
   const total = weights.reduce((s, [, w]) => s + w, 0);
   let cursor  = randomInt(0, total - 1, rng);
@@ -165,9 +148,6 @@ function weightedPick(weights: Array<[SimRole, number]>, rng: Rng): SimRole {
   return weights[weights.length - 1][0];
 }
 
-
-
-
 export function pickRoles(
   culture: WorldCulture,
   count: number,
@@ -175,7 +155,6 @@ export function pickRoles(
 ): SimRole[] {
   const base    = REGION_WEIGHTS[culture.region];
   const bonuses = traitBonuses(culture);
-
 
   const table: Array<[SimRole, number]> = ALL_ROLES.map((role) => {
     const w = (base[role] ?? 1) + (bonuses[role] ?? 0);

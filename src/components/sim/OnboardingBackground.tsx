@@ -1,25 +1,5 @@
 import earthGlobe from "@/assets/earth-globe.png";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 interface Notification {
   city:  string;
   emoji: string;
@@ -39,7 +19,6 @@ const NOTIFICATIONS: Notification[] = [
   { city: "Drift",     emoji: "🌺", lat: -15.0, lon:  -96.0, tone: "neutral", delay: 1.8 },
 ];
 
-
 const TONE_CLASSES: Record<Notification["tone"], string> = {
   warm:    "border-[#ffb37a]/45 bg-[#2a1505]/90 text-[#ffd9b5]",
   cool:    "border-[#7fd8ff]/45 bg-[#04212e]/90 text-[#cbeeff]",
@@ -47,16 +26,12 @@ const TONE_CLASSES: Record<Notification["tone"], string> = {
   alert:   "border-[#ff7a8c]/45 bg-[#2a0712]/90 text-[#ffd0d8]",
 };
 
-
 const TONE_DOT: Record<Notification["tone"], string> = {
   warm:    "#ffb37a",
   cool:    "#7fd8ff",
   neutral: "#c8c0ff",
   alert:   "#ff7a8c",
 };
-
-
-
 
 interface CityLight { lat: number; lon: number; s: number; }
 
@@ -95,17 +70,13 @@ const CITY_LIGHTS: CityLight[] = [
   { lat: -15.8, lon:  -47.9, s: 1.8 }, 
 ];
 
-
 function toSvg(lat: number, lon: number): [number, number] {
   return [(lon / 180) * 84, -(lat / 90) * 84];
 }
 
-
 function toPct(lat: number, lon: number): [number, number] {
   return [((lon + 180) / 360) * 100, ((90 - lat) / 180) * 100];
 }
-
-
 
 export function OnboardingBackground() {
   return (
@@ -116,17 +87,13 @@ export function OnboardingBackground() {
 
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_65%_45%,var(--ls-space-glow)_0%,transparent_60%)]" />
 
-
       <div className="ls-starfield absolute inset-0 opacity-70" />
-
 
       <div className="absolute left-1/2 top-1/2 -translate-x-[28%] -translate-y-[44%] md:-translate-x-[20%]">
         <div className="relative h-[88vmin] w-[88vmin]">
 
-
           <div className="absolute inset-[-14%] rounded-full bg-[radial-gradient(circle,rgba(120,180,255,0.35)_0%,transparent_62%)] blur-2xl" />
           <div className="absolute inset-[-4%]  rounded-full bg-[radial-gradient(circle,rgba(140,200,255,0.25)_0%,transparent_55%)]" />
-
 
           <div
             className="absolute inset-0 rounded-full"
@@ -134,7 +101,6 @@ export function OnboardingBackground() {
           >
 
             <div className="ls-spin-slow absolute inset-0">
-
 
               <img
                 src={earthGlobe}
@@ -145,7 +111,6 @@ export function OnboardingBackground() {
                 style={{ filter: "drop-shadow(0 0 60px rgba(80,160,255,0.35)) saturate(1.05)" }}
                 draggable={false}
               />
-
 
               <svg
                 viewBox="-100 -100 200 200"
@@ -176,7 +141,6 @@ export function OnboardingBackground() {
                   })}
                 </g>
               </svg>
-
 
               {NOTIFICATIONS.map((n, i) => {
                 const [left, top] = toPct(n.lat, n.lon);
@@ -209,7 +173,6 @@ export function OnboardingBackground() {
                 );
               })}
 
-
               <div
                 className="pointer-events-none absolute inset-0"
                 style={{ background: "radial-gradient(circle at 35% 35%, transparent 40%, rgba(5,4,20,0.35) 95%)" }}
@@ -217,13 +180,10 @@ export function OnboardingBackground() {
             </div>
           </div>
 
-
-
           <div className="absolute inset-[-2%] rounded-full border border-[var(--ls-ring)] opacity-30" />
           <div className="ls-spin-reverse absolute inset-[8%] rounded-full border border-dashed border-[var(--ls-ring)] opacity-20" />
         </div>
       </div>
-
 
       <div className="absolute inset-0 bg-[linear-gradient(90deg,var(--ls-space)_0%,transparent_50%)]" />
     </div>

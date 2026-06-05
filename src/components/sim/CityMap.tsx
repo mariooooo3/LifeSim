@@ -197,7 +197,6 @@ export function CityMap({
       updateMarkerEl(marker.getElement(), npc, npc.id === selectedNpcId, isDimmed?.(npc) ?? false);
     }
 
-    // Remove markers/walkers for NPCs that no longer exist.
     for (const [id, marker] of markersRef.current) {
       if (!liveIds.has(id)) {
         marker.remove();
@@ -207,7 +206,6 @@ export function CityMap({
       }
     }
 
-    // Selection changed → re-fly + refresh route layer.
     if (selectedNpcId !== prevSelectedRef.current) {
       routeDirtyRef.current = true;
       prevSelectedRef.current = selectedNpcId;
@@ -218,7 +216,6 @@ export function CityMap({
     }
     lastEasedRef.current = selectedNpcId;
 
-    // Player marker / walker.
     if (player && playerState) {
       const dir = DISTRICTS[playerState.location] ?? DISTRICTS["Home"];
       const pLng = center.lng + (dir[0] * DISTRICT_SPREAD * 0.6) / cosLat;

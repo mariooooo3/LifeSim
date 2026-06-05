@@ -49,7 +49,7 @@ const PLAYER_LOCATION_BY_PHASE: Record<string, string> = {
   lateNoon:     "Office",
   earlyEvening: "Park",
   lateEvening:  "Bar",
-  earlyNight:   "Home",
+  night:        "Home",
   lateNight:    "Home",
 };
 
@@ -118,6 +118,8 @@ interface LifeSimState {
   narrationBuckets: Record<string, string[]>;   // situationKey → variant pool
   pendingKeys: string[];                          // situation keys being fetched
 
+  activeWave: { stressDelta: number; energyDelta: number; socialBoost: number; waveTail: number } | null;
+
   runEnded: boolean;
   endSummary: Record<string, string> | null;
   endSummaryPending: boolean;
@@ -157,6 +159,7 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
   selectedNpcId: null,
   narrationBuckets: loadBuckets(),
   pendingKeys: [],
+  activeWave: null,
   _timerHandle: null,
 
   setPlayer: (player) => set({
@@ -238,6 +241,7 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
       worldPressure: initialPressure,
       worldEvent: `Life begins in ${worldName}.`,
       feed: initFeed,
+      activeWave: null,
       isRunning: false,
       _timerHandle: null,
       runEnded: false,
@@ -269,7 +273,6 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
   setSpeed: (speed) => {
     const { _timerHandle, isRunning } = get();
     set({ speed });
-    // Restart the interval at the new cadence if the sim is running.
     if (isRunning) {
       if (_timerHandle) clearInterval(_timerHandle);
       const handle = setInterval(() => {
@@ -280,16 +283,34 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
   },
 
   tick: () => {
-    const { npcs, day, phaseIndex, worldPressure, worldSeed, worldEventSchedule, feed, tickCount, player, playerState, runEnded } = get();
+    const { npcs, day, phaseIndex, worldPressure, worldSeed, worldEventSchedule, feed, tickCount, player, playerState, runEnded, activeWave } = get();
     if (!worldSeed || runEnded) return;
 
     const phase = DAY_PHASES[phaseIndex] as DayPhase;
 
-    // Determine world effects for this tick (only on first phase of new day)
     let worldEffects = undefined;
+    let newActiveWave = activeWave;
     if (phaseIndex === 0) {
       const storyEvent = eventForDay(worldEventSchedule, day);
-      worldEffects = storyEvent?.npcEffects;
+      if (storyEvent?.npcEffects) {
+        worldEffects = storyEvent.npcEffects;
+        newActiveWave = {
+          stressDelta: storyEvent.npcEffects.stressDelta ?? 0,
+          energyDelta: storyEvent.npcEffects.energyDelta ?? 0,
+          socialBoost: storyEvent.npcEffects.socialBoost ?? 0,
+          waveTail: storyEvent.waveTail ?? 0,
+        };
+      } else if (activeWave && activeWave.waveTail > 0) {
+        const decStress = Math.round(activeWave.stressDelta * activeWave.waveTail);
+        const decEnergy = Math.round(activeWave.energyDelta * activeWave.waveTail);
+        const decSocial = Math.round(activeWave.socialBoost * activeWave.waveTail);
+        if (decStress !== 0 || decEnergy !== 0 || decSocial !== 0) {
+          worldEffects = { stressDelta: decStress, energyDelta: decEnergy, socialBoost: decSocial };
+          newActiveWave = { stressDelta: decStress, energyDelta: decEnergy, socialBoost: decSocial, waveTail: activeWave.waveTail };
+        } else {
+          newActiveWave = null;
+        }
+      }
     }
 
     const { npcs: updatedNpcs, events } = simulateTick({
@@ -308,7 +329,6 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
     let newPressure = worldPressure;
     let newWorldEvent = get().worldEvent;
 
-    // Apply storyteller at end of day (transitioning to next day)
     if (nextPhaseIndex === 0) {
       const storyEvent = eventForDay(worldEventSchedule, nextDay);
       if (storyEvent) {
@@ -324,7 +344,6 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
       }
     }
 
-    // Mid-day narrative hints (delegated to storyteller)
     const hint = midDayWorldHint(day, phase, worldSeed);
     if (hint) {
       events.push({ id: `hint-${day}-${tickCount}`, kind: "world" as const, text: hint, day, phase });
@@ -336,7 +355,6 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
       ? tickPlayerState(playerState, phase, worldPressure)
       : playerState;
 
-    // End of week — last phase of day 7 processed, stop the run
     if (nextDay > DAYS_PER_WEEK && nextPhaseIndex === 0) {
       const { _timerHandle } = get();
       if (_timerHandle) clearInterval(_timerHandle);
@@ -349,6 +367,7 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
         feed: newFeed.slice(0, FEED_MAX),
         tickCount: tickCount + 1,
         playerState: nextPlayerState,
+        activeWave: newActiveWave,
         isRunning: false,
         _timerHandle: null,
         runEnded: true,
@@ -366,6 +385,7 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
       feed: newFeed.slice(0, FEED_MAX),
       tickCount: tickCount + 1,
       playerState: nextPlayerState,
+      activeWave: newActiveWave,
     });
   },
 
@@ -421,6 +441,7 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
     if (_timerHandle) clearInterval(_timerHandle);
 
     let { npcs, day, phaseIndex, worldPressure, tickCount, playerState, player } = get();
+    let activeWave = get().activeWave;
 
     const MAX_TICKS = DAYS_PER_WEEK * PHASES_PER_DAY + 1;
     let iterations = 0;
@@ -431,7 +452,25 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
       let worldEffects = undefined;
       if (phaseIndex === 0) {
         const storyEvent = eventForDay(worldEventSchedule, day);
-        worldEffects = storyEvent?.npcEffects;
+        if (storyEvent?.npcEffects) {
+          worldEffects = storyEvent.npcEffects;
+          activeWave = {
+            stressDelta: storyEvent.npcEffects.stressDelta ?? 0,
+            energyDelta: storyEvent.npcEffects.energyDelta ?? 0,
+            socialBoost: storyEvent.npcEffects.socialBoost ?? 0,
+            waveTail: storyEvent.waveTail ?? 0,
+          };
+        } else if (activeWave && activeWave.waveTail > 0) {
+          const decStress = Math.round(activeWave.stressDelta * activeWave.waveTail);
+          const decEnergy = Math.round(activeWave.energyDelta * activeWave.waveTail);
+          const decSocial = Math.round(activeWave.socialBoost * activeWave.waveTail);
+          if (decStress !== 0 || decEnergy !== 0 || decSocial !== 0) {
+            worldEffects = { stressDelta: decStress, energyDelta: decEnergy, socialBoost: decSocial };
+            activeWave = { stressDelta: decStress, energyDelta: decEnergy, socialBoost: decSocial, waveTail: activeWave.waveTail };
+          } else {
+            activeWave = null;
+          }
+        }
       }
 
       const { npcs: updatedNpcs } = simulateTick({
@@ -475,6 +514,7 @@ export const useLifeSimStore = create<LifeSimState>((set, get) => ({
       worldEvent: "The week is over.",
       tickCount,
       playerState,
+      activeWave,
       isRunning: false,
       _timerHandle: null,
       runEnded: true,
@@ -493,7 +533,6 @@ export const selectSelectedNpc = (s: LifeSimState): NPC | null =>
   s.selectedNpcId ? (s.npcs.find((n) => n.id === s.selectedNpcId) ?? null) : null;
 
 export function coordsForRegion(regionId: string): { lat: number; lng: number } {
-  // Check new city database first
   const city = getCityById(regionId);
   if (city) return { lat: city.lat, lng: city.lng };
 

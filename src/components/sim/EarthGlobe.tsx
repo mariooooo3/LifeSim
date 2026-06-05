@@ -5,9 +5,6 @@ import worldAtlas from "world-atlas/countries-110m.json";
 type AnyTopology = Parameters<typeof feature>[0];
 type AnyObject   = Parameters<typeof feature>[1];
 
-
-
-
 export interface GlobePin {
   id: string;
   lat: number;
@@ -22,9 +19,6 @@ interface Props {
   onSelect: (id: string) => void;
   size?: number;
 }
-
-
-
 
 function getSolarPosition(date: Date): { lat: number; lng: number } {
   const dayOfYear = Math.floor(
@@ -44,9 +38,6 @@ function solarCosine(cityLat: number, cityLng: number, sunLat: number, sunLng: n
     Math.cos(cityLat * D) * Math.cos(sunLat * D) * Math.cos((cityLng - sunLng) * D)
   );
 }
-
-
-
 
 function project(lat: number, lng: number, lat0: number, lng0: number, r: number) {
   const φ  = (lat  * Math.PI) / 180;
@@ -75,9 +66,6 @@ function projectRing(ring: [number, number][], lat0: number, lng0: number, r: nu
   return d ? d + "Z" : "";
 }
 
-
-
-
 const _land = feature(
   worldAtlas as unknown as AnyTopology,
   worldAtlas.objects.land as unknown as AnyObject,
@@ -89,9 +77,6 @@ if (_land.type === "Feature") {
     for (const polygon of geo.coordinates) LAND_RINGS.push(polygon[0] as [number, number][]);
   }
 }
-
-
-
 
 const MEGA_CITIES = new Set([
   "c-tokyo", "c-delhi", "c-shanghai", "c-mumbai", "c-beijing",
@@ -116,10 +101,6 @@ const MAJOR_CITIES = new Set([
   "c-baghdad", "c-khartoum", "c-daressalaam", "c-luanda",
 ]);
 
-
-
-
-
 const CLOUD_BANDS: { lat: number; lng: number; r: number; op: number }[] = [
 
   { lat:  4, lng:   0,  r: 88, op: 0.85 },  
@@ -136,17 +117,11 @@ const CLOUD_BANDS: { lat: number; lng: number; r: number; op: number }[] = [
   { lat:-35, lng:  70,  r: 78, op: 0.65 },  
 ];
 
-
-
-
 interface DragState {
   startX: number; startY: number;
   startLat: number; startLng: number;
   lastLat: number; lastLng: number;
 }
-
-
-
 
 export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -155,13 +130,11 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
   const cx = size / 2;
   const cy = size / 2;
 
-
   const camRef  = useRef({ lat: 20, lng: 10 });
   const velRef  = useRef({ lat: 0, lng: 0 });
   const dragRef = useRef<DragState | null>(null);
   const [cam, setCam]             = useState({ lat: 20, lng: 10 });
   const [isDragging, setIsDragging] = useState(false);
-
 
   const selected  = pins.find((p) => p.id === selectedId);
   const targetRef = useRef({ lat: (selected?.lat ?? 20) * 0.5, lng: selected?.lng ?? 10 });
@@ -169,13 +142,11 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
     if (selected) targetRef.current = { lat: selected.lat * 0.5, lng: selected.lng };
   }, [selectedId]); 
 
-
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(t);
   }, []);
-
 
   const [pulseIds, setPulseIds] = useState<ReadonlySet<string>>(() => new Set());
   useEffect(() => {
@@ -192,9 +163,6 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
     const t = setInterval(cycle, 4_000);
     return () => clearInterval(t);
   }, [pins.length]); 
-
-
-
 
   useEffect(() => {
     let raf: number;
@@ -224,9 +192,6 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, []);
-
-
-
 
   const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     svgRef.current?.setPointerCapture(e.pointerId);
@@ -258,9 +223,6 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
     setIsDragging(false);
   };
 
-
-
-
   const landPaths = useMemo(
     () => LAND_RINGS.map((ring) => projectRing(ring, cam.lat, cam.lng, r, cx, cy)),
     [cam.lat, cam.lng, r, cx, cy],
@@ -275,7 +237,6 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
     return pts.join(" ");
   }, [cam.lat, cam.lng, r, cx, cy]);
 
-
   const solarPos = useMemo(() => getSolarPosition(now), [now]);
 
   const sunP  = project(solarPos.lat, solarPos.lng, cam.lat, cam.lng, r);
@@ -287,14 +248,11 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
   const nightCX = cx + antiP.x;
   const nightCY = cy - antiP.y;
 
-
   const twilightCX = (sunSX + nightCX) / 2;
   const twilightCY = (sunSY + nightCY) / 2;
 
-
   const sunPctX = Math.round((sunSX / size) * 100);
   const sunPctY = Math.round((sunSY / size) * 100);
-
 
   const cloudPts = useMemo(
     () =>
@@ -306,14 +264,8 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
     [cam.lat, cam.lng, r, cx, cy],
   );
 
-
-
-
   return (
     <div className="relative select-none" style={{ width: size, height: size }}>
-
-
-
 
       <div
         className="absolute rounded-full pointer-events-none"
@@ -325,7 +277,6 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
         aria-hidden
       />
 
-
       <div
         className="absolute rounded-full pointer-events-none"
         style={{
@@ -334,7 +285,6 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
         }}
         aria-hidden
       />
-
 
       <div
         className="absolute rounded-full pointer-events-none"
@@ -346,7 +296,6 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
         aria-hidden
       />
 
-
       <div
         className="absolute rounded-full pointer-events-none"
         style={{
@@ -356,8 +305,6 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
         }}
         aria-hidden
       />
-
-
 
       <svg
         ref={svgRef}
@@ -372,7 +319,6 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
       >
         <defs>
 
-
           <radialGradient id="eg-ocean" cx="35%" cy="28%" r="80%">
             <stop offset="0%"   stopColor="oklch(0.62 0.22 210)" />
             <stop offset="30%"  stopColor="oklch(0.42 0.18 226)" />
@@ -380,13 +326,11 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
             <stop offset="100%" stopColor="oklch(0.14 0.06 250)" />
           </radialGradient>
 
-
           <radialGradient id="eg-land-shade" cx="35%" cy="28%" r="75%">
             <stop offset="0%"   stopColor="oklch(0.68 0.12 130 / 0.55)" />
             <stop offset="55%"  stopColor="oklch(0.50 0.11 128 / 0.00)" />
             <stop offset="100%" stopColor="oklch(0.28 0.05 120 / 0.22)" />
           </radialGradient>
-
 
           <linearGradient id="eg-land-lat" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%"   stopColor="oklch(0.62 0.04 200 / 0.28)" />
@@ -396,14 +340,12 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
             <stop offset="100%" stopColor="oklch(0.62 0.04 200 / 0.28)" />
           </linearGradient>
 
-
           <radialGradient id="eg-specular" gradientUnits="userSpaceOnUse"
             cx={sunSX} cy={sunSY} r={r * 0.78}>
             <stop offset="0%"   stopColor="oklch(1 0.02 215 / 0.28)" />
             <stop offset="50%"  stopColor="oklch(1 0.01 215 / 0.09)" />
             <stop offset="100%" stopColor="rgba(0,0,0,0)" />
           </radialGradient>
-
 
           <radialGradient id="eg-twilight" gradientUnits="userSpaceOnUse"
             cx={twilightCX} cy={twilightCY} r={r * 1.15}>
@@ -413,7 +355,6 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
             <stop offset="100%" stopColor="rgba(0,0,0,0)" />
           </radialGradient>
 
-
           <radialGradient id="eg-night" gradientUnits="userSpaceOnUse"
             cx={nightCX} cy={nightCY} r={r * 1.48}>
             <stop offset="0%"   stopColor="oklch(0.05 0.05 252 / 0.84)" />
@@ -422,13 +363,11 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
             <stop offset="100%" stopColor="rgba(0,0,0,0)" />
           </radialGradient>
 
-
           <radialGradient id="eg-limb" cx="50%" cy="50%" r="50%">
             <stop offset="68%"  stopColor="rgba(0,0,0,0)" />
             <stop offset="91%"  stopColor="rgba(0,0,0,0.52)" />
             <stop offset="100%" stopColor="rgba(0,0,0,0.74)" />
           </radialGradient>
-
 
           <radialGradient id="eg-atmos-rim" cx="50%" cy="50%" r="50%">
             <stop offset="79%"  stopColor="rgba(0,0,0,0)" />
@@ -437,11 +376,9 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
             <stop offset="100%" stopColor="rgba(0,0,0,0)" />
           </radialGradient>
 
-
           <filter id="eg-cloud-blur" x="-60%" y="-60%" width="220%" height="220%">
             <feGaussianBlur stdDeviation="22" />
           </filter>
-
 
           <clipPath id="eg-clip">
             <circle cx={cx} cy={cy} r={r} />
@@ -449,9 +386,7 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
 
         </defs>
 
-
         <circle cx={cx} cy={cy} r={r} fill="url(#eg-ocean)" />
-
 
         <g clipPath="url(#eg-clip)">
           {landPaths.map((d, i) =>
@@ -465,12 +400,10 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
             fill="url(#eg-land-lat)" style={{ mixBlendMode: "overlay" }} />
         </g>
 
-
         {equatorPts && (
           <polyline clipPath="url(#eg-clip)" points={equatorPts}
             fill="none" stroke="oklch(0.82 0.08 220 / 0.14)" strokeWidth={0.65} />
         )}
-
 
         {cloudPts.length > 0 && (
           <g clipPath="url(#eg-clip)" filter="url(#eg-cloud-blur)">
@@ -483,17 +416,13 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
           </g>
         )}
 
-
         <circle cx={cx} cy={cy} r={r} fill="url(#eg-specular)" pointerEvents="none" />
-
 
         <circle cx={cx} cy={cy} r={r} fill="url(#eg-night)"
           clipPath="url(#eg-clip)" pointerEvents="none" />
 
-
         <circle cx={cx} cy={cy} r={r} fill="url(#eg-twilight)"
           clipPath="url(#eg-clip)" pointerEvents="none" />
-
 
         {pins.map((pin) => {
           const p = project(pin.lat, pin.lng, cam.lat, cam.lng, r);
@@ -564,7 +493,6 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
             );
           }
 
-
           const dotR = isMega ? 3.8 : isMajor ? 2.8 : 2.4;
           return (
             <g key={pin.id} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`}
@@ -583,9 +511,7 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
           );
         })}
 
-
         <circle cx={cx} cy={cy} r={r} fill="url(#eg-atmos-rim)" pointerEvents="none" />
-
 
         <circle cx={cx} cy={cy} r={r} fill="url(#eg-limb)" pointerEvents="none" />
 

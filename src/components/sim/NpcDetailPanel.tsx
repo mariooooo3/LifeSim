@@ -38,15 +38,12 @@ export function NpcDetailPanel({ npc, allNpcs = [], day = 1, onClose }: Props) {
   const narrationText  = variants && npc ? pickVariant(variants, npc.id) : undefined;
   const isPhasePending = sitKey ? pendingKeys.includes(sitKey) : false;
 
-
-
   useEffect(() => {
     if (!npc) return;
     if (!narrationText && !isPhasePending) {
       narrateCurrentCast();
     }
   }, [npc, narrationText, isPhasePending, narrateCurrentCast]);
-
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -59,7 +56,6 @@ export function NpcDetailPanel({ npc, allNpcs = [], day = 1, onClose }: Props) {
   const stressTone = npc.stress > 65 ? "stress" : npc.stress > 40 ? "warm" : "calm";
   const moneyDisplay = Math.max(0, Math.min(100, Math.round((Math.max(0, npc.money) / 500) * 100)));
   const hasOpportunity = npc.activeOpportunity && !npc.activeOpportunity.resolved;
-
 
   const relEntries = Object.entries(npc.relationships).slice(0, 3);
 
@@ -183,7 +179,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     </div>
   );
 }
-
 
 function affinityLabel(affinity: number): string {
   if (affinity > 70) return "close";

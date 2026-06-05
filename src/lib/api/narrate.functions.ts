@@ -31,7 +31,6 @@ export const narratePhase = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<Record<string, string[]> | null> => {
     if (!hasLLM() || data.situations.length === 0) return null;
 
-
     const countFor = (c: number) => Math.max(1, Math.min(6, c));
     const totalLines = data.situations.reduce((sum, s) => sum + countFor(s.count), 0);
 
@@ -59,8 +58,6 @@ export const narratePhase = createServerFn({ method: "POST" })
       `{"<key>":["..."], ...}\n\n` +
       sitLines;
 
-
-
     const maxTokens = Math.min(4000, totalLines * 85 + 200);
 
     const text = await callLLM(prompt, maxTokens);
@@ -74,7 +71,6 @@ export const narratePhase = createServerFn({ method: "POST" })
     } catch {
       return null;
     }
-
 
     const out: Record<string, string[]> = {};
     for (const [key, val] of Object.entries(parsed)) {
