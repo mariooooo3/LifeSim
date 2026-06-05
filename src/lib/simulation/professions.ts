@@ -1,7 +1,7 @@
-// ---------------------------------------------------------------------------
-// Professions — separates the player-visible job title from the internal
-// simulation archetype. The archetype drives salary band, schedule bias, and
-// opportunity domain; the title is purely for UI and narration.
+
+
+
+
 
 export type ProfessionArchetypeId =
   | "student"
@@ -35,8 +35,8 @@ export interface ProfessionSuggestion {
   domain: ProfessionDomain;
 }
 
-// ---------------------------------------------------------------------------
-// Domain display metadata — label shown in the UI + one-line tagline.
+
+
 
 export const DOMAIN_META: Record<ProfessionDomain, { label: string; tagline: string }> = {
   tech:        { label: "Technology",   tagline: "You build things that didn't exist before" },
@@ -52,8 +52,8 @@ export const DOMAIN_META: Record<ProfessionDomain, { label: string; tagline: str
 
 export const PROFESSION_DOMAINS = Object.keys(DOMAIN_META) as ProfessionDomain[];
 
-// ---------------------------------------------------------------------------
-// Fallback archetype when the player types free text without selecting a chip.
+
+
 
 export const DOMAIN_DEFAULT_ARCHETYPE: Record<ProfessionDomain, ProfessionArchetypeId> = {
   tech:        "junior_dev",
@@ -67,11 +67,11 @@ export const DOMAIN_DEFAULT_ARCHETYPE: Record<ProfessionDomain, ProfessionArchet
   other:       "freelancer",
 };
 
-// ---------------------------------------------------------------------------
-// Suggestions — ~6 per domain, ordered by recognisability.
+
+
 
 const SUGGESTIONS: ProfessionSuggestion[] = [
-  // Tech
+
   { id: "jr-dev",        label: "Junior Software Developer",  archetype: "junior_dev",    domain: "tech" },
   { id: "qa",            label: "QA Tester",                  archetype: "junior_dev",    domain: "tech" },
   { id: "it-support",    label: "IT Support Specialist",      archetype: "office_worker", domain: "tech" },
@@ -80,7 +80,7 @@ const SUGGESTIONS: ProfessionSuggestion[] = [
   { id: "product-mgr",   label: "Product Manager",            archetype: "office_worker", domain: "tech" },
   { id: "devops",        label: "DevOps Engineer",            archetype: "junior_dev",    domain: "tech" },
 
-  // Art & Media
+
   { id: "graphic-des",   label: "Graphic Designer",           archetype: "designer",      domain: "art_media" },
   { id: "video-editor",  label: "Video Editor",               archetype: "artist",        domain: "art_media" },
   { id: "tattoo",        label: "Tattoo Artist",              archetype: "artist",        domain: "art_media" },
@@ -89,7 +89,7 @@ const SUGGESTIONS: ProfessionSuggestion[] = [
   { id: "music-prod",    label: "Music Producer",             archetype: "artist",        domain: "art_media" },
   { id: "content-cre",   label: "Content Creator",            archetype: "freelancer",    domain: "art_media" },
 
-  // Business
+
   { id: "marketing",     label: "Marketing Specialist",       archetype: "office_worker", domain: "business" },
   { id: "sales-rep",     label: "Sales Representative",       archetype: "office_worker", domain: "business" },
   { id: "accountant",    label: "Accountant",                 archetype: "office_worker", domain: "business" },
@@ -97,7 +97,7 @@ const SUGGESTIONS: ProfessionSuggestion[] = [
   { id: "biz-analyst",   label: "Business Analyst",           archetype: "office_worker", domain: "business" },
   { id: "project-mgr",   label: "Project Manager",            archetype: "office_worker", domain: "business" },
 
-  // Service
+
   { id: "retail",        label: "Retail Sales Associate",     archetype: "service_worker", domain: "service" },
   { id: "cust-support",  label: "Customer Support Agent",     archetype: "service_worker", domain: "service" },
   { id: "security",      label: "Security Guard",             archetype: "service_worker", domain: "service" },
@@ -105,7 +105,7 @@ const SUGGESTIONS: ProfessionSuggestion[] = [
   { id: "cleaner",       label: "Cleaner",                    archetype: "service_worker", domain: "service" },
   { id: "postal",        label: "Postal Worker",              archetype: "service_worker", domain: "service" },
 
-  // Education
+
   { id: "teacher",       label: "School Teacher",             archetype: "education",     domain: "education" },
   { id: "lecturer",      label: "University Lecturer",        archetype: "education",     domain: "education" },
   { id: "tutor",         label: "Private Tutor",              archetype: "education",     domain: "education" },
@@ -113,7 +113,7 @@ const SUGGESTIONS: ProfessionSuggestion[] = [
   { id: "librarian",     label: "Librarian",                  archetype: "education",     domain: "education" },
   { id: "counselor",     label: "School Counselor",           archetype: "education",     domain: "education" },
 
-  // Healthcare
+
   { id: "nurse",         label: "Nurse",                      archetype: "healthcare",    domain: "health" },
   { id: "paramedic",     label: "Paramedic",                  archetype: "healthcare",    domain: "health" },
   { id: "physio",        label: "Physiotherapist",            archetype: "healthcare",    domain: "health" },
@@ -121,7 +121,7 @@ const SUGGESTIONS: ProfessionSuggestion[] = [
   { id: "pharmacist",    label: "Pharmacist",                 archetype: "healthcare",    domain: "health" },
   { id: "social-work",   label: "Social Worker",              archetype: "healthcare",    domain: "health" },
 
-  // Hospitality
+
   { id: "barista",       label: "Barista",                    archetype: "hospitality",   domain: "hospitality" },
   { id: "waiter",        label: "Waiter",                     archetype: "hospitality",   domain: "hospitality" },
   { id: "bartender",     label: "Bartender",                  archetype: "hospitality",   domain: "hospitality" },
@@ -129,7 +129,7 @@ const SUGGESTIONS: ProfessionSuggestion[] = [
   { id: "chef",          label: "Chef",                       archetype: "hospitality",   domain: "hospitality" },
   { id: "event-staff",   label: "Event Staff",                archetype: "hospitality",   domain: "hospitality" },
 
-  // Manual / Trades
+
   { id: "electrician",   label: "Electrician",                archetype: "blue_collar",   domain: "manual" },
   { id: "plumber",       label: "Plumber",                    archetype: "blue_collar",   domain: "manual" },
   { id: "construction",  label: "Construction Worker",        archetype: "blue_collar",   domain: "manual" },
@@ -137,7 +137,7 @@ const SUGGESTIONS: ProfessionSuggestion[] = [
   { id: "carpenter",     label: "Carpenter",                  archetype: "blue_collar",   domain: "manual" },
   { id: "factory",       label: "Factory Worker",             archetype: "blue_collar",   domain: "manual" },
 
-  // Other
+
   { id: "freelancer",    label: "Freelancer",                 archetype: "freelancer",    domain: "other" },
   { id: "student",       label: "Student",                    archetype: "student",       domain: "other" },
   { id: "musician",      label: "Musician",                   archetype: "artist",        domain: "other" },
@@ -148,14 +148,14 @@ const SUGGESTIONS: ProfessionSuggestion[] = [
   { id: "unemployed",    label: "Between jobs",               archetype: "unemployed",    domain: "other" },
 ];
 
-// ---------------------------------------------------------------------------
-// Helpers
+
+
 
 export function getSuggestionsByDomain(domain: ProfessionDomain): ProfessionSuggestion[] {
   return SUGGESTIONS.filter((s) => s.domain === domain);
 }
 
-// Simulation impact — hook for future use; does not affect tick loop today.
+
 export function derivePlayerArchetypeImpact(archetype: ProfessionArchetypeId): {
   baseSalaryTilt: number;
   workScheduleType: "office" | "service" | "creative" | "student" | "flexible";

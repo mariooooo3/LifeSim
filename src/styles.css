@@ -38,10 +38,13 @@
   --color-warm: var(--warm);
   --color-stress: var(--stress);
 
-  /* One plain system font everywhere — no web fonts loaded. */
-  --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* Editorial-cosmic type system:
+     Fraunces = distinctive optical serif for narrative/display moments,
+     Hanken Grotesk = refined grotesk for UI/body,
+     JetBrains Mono = technical "dossier/log" voice for labels and data. */
+  --font-display: "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
+  --font-sans: "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Code", monospace;
 }
 
 /* Dark-first */
@@ -104,10 +107,14 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
-  /* Headings use the same plain font as everything else. */
+  /* Narrative/display headings use the optical serif. */
   .font-display {
-    font-family: var(--font-sans);
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    letter-spacing: -0.015em;
+    font-weight: 500;
   }
+  body { letter-spacing: -0.006em; }
   /* Filmic grain over the whole app — subtle "designed" texture */
   body::after {
     content: "";

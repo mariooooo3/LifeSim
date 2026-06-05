@@ -55,11 +55,11 @@ export function SimHeader({
               animation: isRunning ? "orbit-spin 12s linear infinite" : "none",
             }}
           >
-            {/* sphere outline */}
+
             <circle cx="8" cy="8" r="6.2" stroke="currentColor" strokeWidth="0.9" />
-            {/* equator */}
+
             <ellipse cx="8" cy="8" rx="6.2" ry="2.2" stroke="currentColor" strokeWidth="0.8" />
-            {/* central meridian */}
+
             <ellipse cx="8" cy="8" rx="2.5" ry="6.2" stroke="currentColor" strokeWidth="0.8" />
           </svg>
           <span className="absolute inset-0 rounded-full ring-1 ring-foreground/10" />
@@ -72,9 +72,12 @@ export function SimHeader({
         </div>
         <Link
           to="/globe"
-          className="hidden rounded-md border border-foreground/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.15em] text-muted-foreground transition-colors hover:border-foreground/20 hover:text-foreground sm:block"
+          className="hidden items-center gap-1.5 rounded-full border border-foreground/10 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground transition-colors hover:border-foreground/20 hover:text-foreground sm:flex"
         >
-          ← Origins
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
+            <path d="M13 8H3M7.5 3.5L3 8l4.5 4.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Origins
         </Link>
       </div>
 

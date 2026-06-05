@@ -1,24 +1,24 @@
 import { useMemo } from "react";
 import type { DayPhase } from "@/lib/simulation/constants";
 
-// ---------------------------------------------------------------------------
-// DashboardBackground — procedural city skyline that transitions through
-// morning → noon → evening → night in sync with the simulation's day phase.
-//
-// Purely presentational. Pass `phase` (the sim's DayPhase) and the background
-// updates via CSS custom-property transitions (2.5 s cross-fade).
-//
-// Layers (back → front):
-//   1. Sky gradient
-//   2. CSS starfield (fades out during the day)
-//   3. Celestial disc (sun / moon)
-//   4. Distance haze
-//   5. Three SVG skyline layers (far / mid / near)
-//   6. Tree silhouettes
-//   7. Moving cars with headlights / taillights
-//   8. Tint overlay
 
-// Map the simulation's 8-phase day to the 4 visual time slots
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 type TimeOfDay = "morning" | "noon" | "evening" | "night";
 
 function phaseToTimeOfDay(phase: DayPhase): TimeOfDay {
@@ -38,8 +38,8 @@ function phaseToTimeOfDay(phase: DayPhase): TimeOfDay {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Skyline SVG generator
+
+
 
 function generateSkyline(seed: number, count: number, maxH: number) {
   const rng = (i: number) => {
@@ -114,10 +114,10 @@ function SkylineLayer({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Moving cars
 
-// Two lanes: y=3-12 = right-going (bottom lane), y=30-42 = left-going (upper lane)
+
+
+
 const CAR_LANES = [
   { y: 3,  dur: 18, delay: 0,  scale: 0.80, dir:  1, type: "sedan" },
   { y: 8,  dur: 22, delay: 7,  scale: 0.90, dir:  1, type: "suv"   },
@@ -136,11 +136,11 @@ const CAR_PATHS = {
 function MovingCars() {
   return (
     <div className="absolute bottom-0 left-0 h-[80px] w-full overflow-hidden">
-      {/* Road bands */}
+
       <div className="absolute bottom-[52px] left-0 right-0 h-[22px] bg-[var(--ls-road-mid)] opacity-40" />
       <div className="absolute bottom-[28px] left-0 right-0 h-[24px] bg-[var(--ls-road-near)] opacity-50" />
       <div className="absolute bottom-0       left-0 right-0 h-[28px] bg-[var(--ls-road-close)] opacity-60" />
-      {/* Lane dividers */}
+
       <div className="absolute bottom-[40px] left-0 right-0 h-[2px] opacity-20"
         style={{ background: "repeating-linear-gradient(90deg,var(--ls-road-line) 0px,var(--ls-road-line) 18px,transparent 18px,transparent 36px)" }}
       />
@@ -157,10 +157,10 @@ function MovingCars() {
           >
             <svg width={26 * lane.scale} height={18 * lane.scale} viewBox="0 0 26 18" style={{ display: "block", overflow: "visible" }}>
               <path d={CAR_PATHS[lane.type]} fill="var(--ls-car-body)" opacity={0.85 + lane.scale * 0.1} />
-              {/* Front light */}
+
               <ellipse cx={going ? 24 : 1} cy={10} rx={2} ry={2.5} fill={going ? "var(--ls-headlight)" : "var(--ls-taillight)"} opacity={0.9} />
               <ellipse cx={going ? 24 : 1} cy={10} rx={6} ry={5}   fill={going ? "var(--ls-headlight-glow)" : "var(--ls-taillight-glow)"} opacity={0.35} />
-              {/* Rear light */}
+
               <ellipse cx={going ? 1 : 24} cy={10} rx={2} ry={2.5} fill={going ? "var(--ls-taillight)" : "var(--ls-headlight)"} opacity={0.9} />
               <ellipse cx={going ? 1 : 24} cy={10} rx={5} ry={4}   fill={going ? "var(--ls-taillight-glow)" : "var(--ls-headlight-glow)"} opacity={0.3} />
             </svg>
@@ -171,8 +171,8 @@ function MovingCars() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main export
+
+
 
 interface Props {
   phase: DayPhase;
@@ -187,7 +187,7 @@ export function DashboardBackground({ phase }: Props) {
       data-time={time}
       className="ls-dashboard-bg pointer-events-none absolute inset-0 overflow-hidden"
     >
-      {/* Sky */}
+
       <div
         className="absolute inset-0"
         style={{
@@ -196,22 +196,22 @@ export function DashboardBackground({ phase }: Props) {
         }}
       />
 
-      {/* Stars — opacity driven by CSS var (0 day, 0.9 night) */}
+
       <div className="ls-stars absolute inset-0" />
 
-      {/* Sun / moon disc */}
+
       <div className="ls-celestial absolute" />
 
-      {/* Horizon haze */}
+
       <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-[linear-gradient(180deg,transparent_0%,var(--ls-haze)_100%)]" />
 
-      {/* Skyline */}
+
       <div className="absolute bottom-0 left-0 right-0">
         <SkylineLayer seed={1} count={26} maxHeight={180} fillVar="--ls-bldg-far"  windowVar="--ls-win-far"  className="opacity-90" />
         <SkylineLayer seed={7} count={22} maxHeight={240} fillVar="--ls-bldg-mid"  windowVar="--ls-win-mid"  litWindows className="opacity-95" />
         <SkylineLayer seed={3} count={16} maxHeight={300} fillVar="--ls-bldg-near" windowVar="--ls-win-near" litWindows />
 
-        {/* Tree silhouettes */}
+
         <svg viewBox="0 0 1000 60" preserveAspectRatio="xMidYMax slice" className="absolute bottom-0 left-0 w-full" style={{ height: 60 }}>
           {Array.from({ length: 14 }).map((_, i) => {
             const x = i * 75 + ((i * 37) % 30);
@@ -229,7 +229,7 @@ export function DashboardBackground({ phase }: Props) {
         <MovingCars />
       </div>
 
-      {/* Time-of-day mood tint */}
+
       <div className="absolute inset-0 mix-blend-overlay" style={{ background: "var(--ls-tint)", transition: "background 2.5s ease" }} />
     </div>
   );

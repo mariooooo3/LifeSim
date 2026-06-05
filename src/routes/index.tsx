@@ -55,12 +55,12 @@ function Onboarding() {
   const [age,    setAge]    = useState("");
   const [gender, setGender] = useState<Gender>("");
 
-  // Profession state
+
   const [domain,    setDomain]    = useState<ProfessionDomain>("tech");
   const [title,     setTitle]     = useState("");
   const [archetype, setArchetype] = useState<ProfessionArchetypeId>("junior_dev");
-  // Track whether the current archetype came from a suggestion click
-  // (if not, we use the domain default on submit)
+
+
   const [suggestionId, setSuggestionId] = useState<string | null>(null);
 
   const [vignette] = useState(
@@ -85,7 +85,7 @@ function Onboarding() {
 
   const handleTitleChange = (t: string) => {
     setTitle(t);
-    // If user edits the title manually, detach from suggestion
+
     if (suggestionId) setSuggestionId(null);
   };
 
@@ -98,25 +98,41 @@ function Onboarding() {
       className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-16"
       style={{ background: "var(--ls-space, #08071a)" }}
     >
-      {/* Full-viewport background — Earth + starfield + city notifications */}
+
       <OnboardingBackground />
 
-      {/* Content — z-10 so it sits above the backdrop */}
+
       <div className="relative z-10 w-full max-w-md">
         <div className="mb-10 text-center">
           <img
             src={lifeSimLogo}
             alt="LifeSim"
-            className="mx-auto mb-4 h-36 w-36 drop-shadow-[0_0_24px_rgba(120,180,255,0.4)]"
+            className="animate-rise mx-auto mb-5 h-36 w-36 drop-shadow-[0_0_24px_rgba(120,180,255,0.4)]"
             draggable={false}
           />
-          <h1 className="text-balance font-display text-4xl font-semibold tracking-tight text-foreground drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)] md:text-5xl">
-            The world is already moving
+          <span
+            className="animate-rise mb-4 inline-flex items-center gap-1.5 rounded-full border border-foreground/10 bg-foreground/[0.03] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground backdrop-blur-sm"
+            style={{ animationDelay: "0.05s" }}
+          >
+            <span className="h-1 w-1 rounded-full bg-[var(--calm)]" />
+            Step 1 · You
+          </span>
+          <h1
+            className="animate-rise text-balance font-display text-[2.75rem] leading-[1.04] tracking-tight text-foreground drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)] md:text-[3.25rem]"
+            style={{ animationDelay: "0.12s" }}
+          >
+            The world is <em className="font-light italic text-[var(--calm)]">already</em> moving
           </h1>
-          <p className="mt-3 text-balance text-sm font-medium italic leading-relaxed text-foreground/90">
+          <p
+            className="animate-rise mt-4 text-balance text-sm font-medium italic leading-relaxed text-foreground/85"
+            style={{ animationDelay: "0.2s" }}
+          >
             {vignette}
           </p>
-          <p className="mx-auto mt-3 max-w-[20rem] text-balance text-sm font-semibold text-foreground/90">
+          <p
+            className="animate-rise mx-auto mt-3 max-w-[20rem] text-balance text-sm text-muted-foreground"
+            style={{ animationDelay: "0.28s" }}
+          >
             Tell us who you are. Then choose where your life begins.
           </p>
         </div>
@@ -135,9 +151,10 @@ function Onboarding() {
             });
             navigate({ to: "/globe" });
           }}
-          className="glass space-y-5 rounded-2xl p-6"
+          className="glass animate-rise space-y-5 rounded-[1.5rem] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_24px_60px_-24px_rgba(0,0,0,0.65)]"
+          style={{ animationDelay: "0.36s" }}
         >
-          {/* Name */}
+
           <Field label="Name">
             <input
               value={name}
@@ -148,7 +165,7 @@ function Onboarding() {
             />
           </Field>
 
-          {/* Age */}
+
           <Field label="Age">
             <input
               type="number"
@@ -162,7 +179,7 @@ function Onboarding() {
             />
           </Field>
 
-          {/* Gender */}
+
           <Field label="Gender">
             <div className="grid grid-cols-2 gap-2.5">
               {GENDERS.map((g) => {
@@ -188,13 +205,13 @@ function Onboarding() {
             </div>
           </Field>
 
-          {/* Profession */}
+
           <div className="space-y-3">
-            <span className="block text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            <span className="block font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
               What do you do
             </span>
 
-            {/* Domain selector */}
+
             <div className="flex flex-wrap gap-1.5">
               {PROFESSION_DOMAINS.map((d) => (
                 <button
@@ -212,7 +229,7 @@ function Onboarding() {
               ))}
             </div>
 
-            {/* Free-text title input */}
+
             <input
               value={title}
               onChange={(e) => handleTitleChange(e.target.value)}
@@ -221,7 +238,7 @@ function Onboarding() {
               required
             />
 
-            {/* Suggestion chips */}
+
             <div className="flex flex-wrap gap-1.5">
               {suggestions.map((s) => (
                 <button
@@ -239,15 +256,20 @@ function Onboarding() {
               ))}
             </div>
 
-            {/* Tagline */}
+
             <p className="pl-0.5 text-[11px] italic text-muted-foreground/60">{tagline}</p>
           </div>
 
           <button
             type="submit"
-            className="mt-2 w-full rounded-lg bg-foreground/90 px-4 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground"
+            className="group mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-medium text-background transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/90 active:scale-[0.98]"
           >
-            Choose where life begins →
+            Choose where life begins
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-background/10 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 group-hover:-translate-y-[1px]">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden>
+                <path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
           </button>
         </form>
       </div>
@@ -274,7 +296,7 @@ function Onboarding() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+      <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
         {label}
       </span>
       {children}

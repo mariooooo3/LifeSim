@@ -7,11 +7,11 @@ import { deriveCulture, pickNames, pickRoles } from "./culture";
 import type { WorldCulture } from "./culture";
 import { resolveLocation } from "./movement";
 
-// ---------------------------------------------------------------------------
-// NPC Factory — generates a culturally-aware 10-person cast from a WorldSeed.
-// Names from regional pools, roles weighted by culture + tilt, personalities
-// shaped by cultural traits. world.seed varies per run; world.cityBase is the
-// stable city anchor so each re-roll produces a fresh but city-coherent cast.
+
+
+
+
+
 
 const HIDDEN_TRAITS: HiddenTrait[] = [
   "fearOfFailure",
@@ -21,9 +21,9 @@ const HIDDEN_TRAITS: HiddenTrait[] = [
   "approvalSeeking",
 ];
 
-// ---------------------------------------------------------------------------
-// Initial action — derived from personality so each NPC starts doing something
-// plausible rather than everyone defaulting to "relax".
+
+
+
 
 function deriveInitialAction(
   personality: Personality,
@@ -31,11 +31,11 @@ function deriveInitialAction(
   rng: Rng,
 ): SimAction {
   const roll = rng.next();
-  // High discipline + high work culture → probably already working
+
   const workBias     = personality.discipline / 100 * 0.5 + culture.traits.workIntensity * 0.3;
-  // High sociability + open culture → catching up with someone
+
   const socialBias   = personality.sociability / 100 * 0.3 + culture.traits.socialOpenness * 0.2;
-  // Low energy → sleeping
+
   const sleepThresh  = 0.15 + (1 - culture.traits.pace) * 0.1;
 
   if (roll < sleepThresh)                          return "sleep";
@@ -45,14 +45,14 @@ function deriveInitialAction(
   return "relax";
 }
 
-// ---------------------------------------------------------------------------
-// Personality builder — culturally influenced
+
+
 
 function buildPersonality(rng: Rng, seed: WorldSeed, culture: WorldCulture): Personality {
   const t        = culture.traits;
   const traitIdx = randomInt(0, HIDDEN_TRAITS.length - 1, rng);
 
-  // Each dimension has a cultural floor so the city's character shows through.
+
   const discipline  = Math.round(randomBetween(20, 90, rng) * (0.5 + t.workIntensity  * 0.5));
   const sociability = Math.round(randomBetween(20, 90, rng) * (0.3 + t.socialOpenness * 0.7));
   const ambition    = Math.round(randomBetween(20, 90, rng) * (0.5 + t.ambition       * 0.5));
@@ -69,13 +69,13 @@ function buildPersonality(rng: Rng, seed: WorldSeed, culture: WorldCulture): Per
   };
 }
 
-// ---------------------------------------------------------------------------
-// Initial needs — seeded from culture tilt
+
+
 
 function buildNeeds(rng: Rng, seed: WorldSeed, culture: WorldCulture) {
   const t = culture.traits;
 
-  // Loneliness suppresses starting social need; nightlife boosts fun baseline.
+
   const social = Math.round(
     randomBetween(25, 80, rng) * (0.35 + (1 - t.loneliness) * 0.65) * (0.5 + seed.socialIntensity * 0.5)
   );
@@ -93,12 +93,12 @@ function buildNeeds(rng: Rng, seed: WorldSeed, culture: WorldCulture) {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Financial state — influenced by city wealth profile + culture tilt
+
+
 
 function buildFinances(rng: Rng, seed: WorldSeed, culture: WorldCulture, personality: Personality) {
   const t        = culture.traits;
-  // Luxury cities have higher salaries AND higher rents.
+
   const salaryMult = 1 + personality.ambition / 100 + t.luxuryLifestyle * 0.3;
   const rentMult   = 1 + seed.economicPressure + t.luxuryLifestyle * 0.4;
 
@@ -119,14 +119,14 @@ function buildFinances(rng: Rng, seed: WorldSeed, culture: WorldCulture, persona
   };
 }
 
-// ---------------------------------------------------------------------------
-// Main export
+
+
 
 export function generateNPCs(world: WorldSeed): NPC[] {
   const rng     = createSeededRng(world.seed);
   const culture = deriveCulture(world);
 
-  // Generate names and roles for the full cast
+
   const names = pickNames(culture.region, world.regionId, world.seed, 10);
   const roles = pickRoles(culture, 10, rng);
 
@@ -140,7 +140,7 @@ export function generateNPCs(world: WorldSeed): NPC[] {
     const needs       = buildNeeds(rng, world, culture);
     const finances    = buildFinances(rng, world, culture, personality);
 
-    // Stress baseline: city pace + world stress + survival pressure
+
     const stress = Math.round(
       randomBetween(8, 38, rng)
       + world.stressLevel * 25
@@ -148,13 +148,13 @@ export function generateNPCs(world: WorldSeed): NPC[] {
       + culture.traits.survivalPressure * 12
     );
 
-    // Build basic relationships: each NPC knows 2-3 others
+
     const relationships: Record<string, { affinity: number; trust: number }> = {};
     const relCount = randomInt(2, 3, rng);
     for (let r = 0; r < relCount; r++) {
       const targetIdx = (idx + r + 1) % 10;
       const targetId  = `npc-${targetIdx}`;
-      // Social cities generate warmer initial affinities
+
       relationships[targetId] = {
         affinity: Math.round(randomBetween(15, 80, rng) * (0.5 + culture.traits.socialOpenness * 0.5)),
         trust:    Math.round(randomBetween(25, 75, rng)),

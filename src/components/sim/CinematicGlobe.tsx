@@ -2,9 +2,9 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three-stdlib";
 
-// ---------------------------------------------------------------------------
-// Public contract — matches the existing EarthGlobe so the /globe flow is
-// untouched. Driven by LifeSim's 509-city pin list + selection callback.
+
+
+
 
 export interface GlobePin {
   id: string;
@@ -38,15 +38,15 @@ const CLOUD_TEX = "https://threejs.org/examples/textures/planets/earth_clouds_10
 export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
 
-  // Live refs so the (mount-once) Three.js loop always sees current props.
+
   const pinsRef = useRef(pins);
   const onSelectRef = useRef(onSelect);
   const selectedIdRef = useRef(selectedId);
   pinsRef.current = pins;
   onSelectRef.current = onSelect;
 
-  // Signal the render loop to fly the camera when selection changes externally
-  // (e.g. via the search panel).
+
+
   const flyToSelectedRef = useRef<string | null>(null);
   useEffect(() => {
     if (selectedId && selectedId !== selectedIdRef.current) {
@@ -62,12 +62,12 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     const width = mount.clientWidth || 1;
     const height = mount.clientHeight || 1;
 
-    // Snapshot the pin set once — positions are stable for the lifetime of
-    // the globe. Parallel id array maps raycast hits back to pin ids.
+
+
     const cityList = pinsRef.current;
     const cityIds = cityList.map((p) => p.id);
 
-    // ---- Renderer
+
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
@@ -76,12 +76,12 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     mount.appendChild(renderer.domElement);
 
-    // ---- Scene & camera
+
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 2000);
     camera.position.set(0, 0.5, 5.8);
 
-    // ---- Lighting (even, cinematic)
+
     const sun = new THREE.DirectionalLight(0xfff1d6, 1.6);
     sun.position.set(-5, 2, 4);
     scene.add(sun);
@@ -97,7 +97,7 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     scene.add(new THREE.HemisphereLight(0xbcd4ff, 0x6a4a2a, 0.8));
     scene.add(new THREE.AmbientLight(0xffffff, 0.45));
 
-    // ---- Background: deep nebula gradient sphere
+
     const bgGeo = new THREE.SphereGeometry(900, 32, 32);
     const bgMat = new THREE.ShaderMaterial({
       side: THREE.BackSide,
@@ -136,7 +136,7 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     });
     scene.add(new THREE.Mesh(bgGeo, bgMat));
 
-    // ---- Starfield
+
     const starGeo = new THREE.BufferGeometry();
     const starCount = 3500;
     const starPos = new Float32Array(starCount * 3);
@@ -167,7 +167,7 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     });
     scene.add(new THREE.Points(starGeo, starMat));
 
-    // ---- Earth
+
     const loader = new THREE.TextureLoader();
     loader.setCrossOrigin("anonymous");
     const earthDay = loader.load(EARTH_TEX);
@@ -187,11 +187,11 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
       shininess: 18,
     });
     const earth = new THREE.Mesh(earthGeo, earthMat);
-    // Start facing the Pacific — more neutral than Europe appearing dead-center
+
     earth.rotation.y = 2.5;
     scene.add(earth);
 
-    // ---- Clouds
+
     const cloudGeo = new THREE.SphereGeometry(EARTH_R * 1.012, 96, 96);
     const cloudMat = new THREE.MeshLambertMaterial({
       map: cloudTex,
@@ -202,7 +202,7 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     const clouds = new THREE.Mesh(cloudGeo, cloudMat);
     earth.add(clouds);
 
-    // ---- Atmosphere (outer fresnel glow)
+
     const atmGeo = new THREE.SphereGeometry(EARTH_R * 1.18, 96, 96);
     const atmMat = new THREE.ShaderMaterial({
       transparent: true,
@@ -239,7 +239,7 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     });
     scene.add(new THREE.Mesh(atmGeo, atmMat));
 
-    // ---- City lights — driven by LifeSim pins
+
     const cityGeo = new THREE.BufferGeometry();
     const cityPos = new Float32Array(cityList.length * 3);
     const citySize = new Float32Array(cityList.length);
@@ -249,7 +249,7 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
       cityPos[i * 3] = v.x;
       cityPos[i * 3 + 1] = v.y;
       cityPos[i * 3 + 2] = v.z;
-      // Highlighted (search-matched) cities glow brighter; rest get a gentle base.
+
       const w = c.highlighted ? 0.95 : c.dim ? 0.5 : 0.68;
       citySize[i] = 6 + w * 22;
       cityWeight[i] = w;
@@ -313,7 +313,7 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     const cityPoints = new THREE.Points(cityGeo, cityMat);
     earth.add(cityPoints);
 
-    // ---- Cinematic camera fly
+
     type Fly = {
       active: boolean;
       t: number;
@@ -335,7 +335,7 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     const easeInOutCubic = (x: number) =>
       x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
 
-    // Start a flight to a world-space surface point.
+
     const startFlyTo = (targetWorld: THREE.Vector3) => {
       userInteracting = true;
       controls.autoRotate = false;
@@ -351,7 +351,7 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
       controls.enabled = false;
     };
 
-    // ---- Click-to-select (raycast cities)
+
     const raycaster = new THREE.Raycaster();
     raycaster.params.Points = { threshold: 0.035 };
     const ndc = new THREE.Vector2();
@@ -368,7 +368,7 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
       const dx = e.clientX - downX;
       const dy = e.clientY - downY;
       const dt = performance.now() - downT;
-      if (Math.hypot(dx, dy) > 5 || dt > 350) return; // a drag, not a click
+      if (Math.hypot(dx, dy) > 5 || dt > 350) return; 
 
       const rect = renderer.domElement.getBoundingClientRect();
       ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -394,18 +394,18 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     renderer.domElement.addEventListener("pointerup", onPointerUp);
     renderer.domElement.style.cursor = "grab";
 
-    // ---- Controls
+
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.12;   // smoother, more connected settle
-    controls.rotateSpeed = 0.55;     // drag tracks the cursor more naturally
+    controls.dampingFactor = 0.12;   
+    controls.rotateSpeed = 0.55;     
     controls.zoomSpeed = 0.7;
     controls.enablePan = false;
     controls.minDistance = 1.25;
     controls.maxDistance = 8;
     controls.autoRotate = true;
     controls.autoRotateSpeed = 0.38;
-    // Keep the up-vector stable — prevents the awkward flip when dragging over the poles
+
     controls.minPolarAngle = 0.25;
     controls.maxPolarAngle = Math.PI - 0.25;
 
@@ -424,7 +424,7 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     renderer.domElement.addEventListener("pointermove", onPointerMoveMaybeDrag);
     renderer.domElement.addEventListener("wheel", pauseAuto, { passive: true });
 
-    // ---- Resize
+
     const onResize = () => {
       const w = mount.clientWidth;
       const h = mount.clientHeight;
@@ -436,7 +436,7 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
     const ro = new ResizeObserver(onResize);
     ro.observe(mount);
 
-    // ---- Animate
+
     const clock = new THREE.Clock();
     let raf = 0;
     const tick = () => {
@@ -446,7 +446,7 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
       cityMat.uniforms.uTime.value = t;
       cityMat.uniforms.uCamPos.value.copy(camera.position);
 
-      // External selection (search panel) → fly the camera to that city.
+
       const flyId = flyToSelectedRef.current;
       if (flyId) {
         flyToSelectedRef.current = null;
@@ -454,7 +454,7 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
         if (idx >= 0) {
           const p = cityList[idx];
           const surface = latLonToVec3(p.lat, p.lng, EARTH_R);
-          // surface point in world space (earth is at origin, only rotates)
+
           surface.applyMatrix4(earth.matrixWorld);
           startFlyTo(surface);
         }
@@ -512,8 +512,8 @@ export function CinematicGlobe({ pins, selectedId, onSelect, className }: Props)
         mount.removeChild(renderer.domElement);
       }
     };
-    // Mount once — props are read through refs.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+
   }, []);
 
   return (

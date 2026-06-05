@@ -1,14 +1,14 @@
 import type { CultureRegion } from "./regions";
 
-// ---------------------------------------------------------------------------
-// Regional name pools — 20 first names + 15 last names per region.
-// Mixed gender, culturally authentic, internationally recognizable.
-// Each pool is enough to give 10 NPCs non-repeating, believable names.
+
+
+
+
 
 type NamePool = { first: string[]; last: string[] };
 
-// Name region is slightly more granular than culture region for authenticity.
-// Multiple culture regions share a name pool where culturally appropriate.
+
+
 
 const POOLS: Record<string, NamePool> = {
   japan: {
@@ -145,14 +145,14 @@ const POOLS: Record<string, NamePool> = {
   },
 };
 
-// Map culture region → name pool key (some regions share pools)
+
 const REGION_POOL: Record<CultureRegion, string> = {
   japan:          "japan",
   korea:          "korea",
   china:          "china",
   nordic:         "nordic",
   germanic:       "germanic",
-  romance_europe: "french",       // mixed pool — French base feels most "Romance"
+  romance_europe: "french",       
   eastern_europe: "eastern_europe",
   slavic:         "slavic",
   middle_east:    "middle_east",
@@ -165,29 +165,29 @@ const REGION_POOL: Record<CultureRegion, string> = {
   anglophone:     "anglophone",
 };
 
-// City-specific pool overrides (so Paris NPCs have French names, Rome has Italian, etc.)
+
 const CITY_POOL_OVERRIDE: Record<string, string> = {
-  // France
+
   "c-paris": "french",
-  // Italy
+
   "c-rome": "italian", "c-milan": "italian",
-  // Iberia
+
   "c-madrid": "iberian", "c-barcelona": "iberian",
   "c-lisbon": "iberian", "c-porto": "iberian",
-  // Germanic
+
   "c-berlin": "germanic", "c-hamburg": "germanic", "c-munich": "germanic",
   "c-vienna": "germanic", "c-zurich": "germanic",
-  // Netherlands uses germanic pool too
+
   "c-amsterdam": "germanic",
-  // Romania
+
   "c-bucharest": "romanian",
   "c-cluj":      "romanian",
   "c-iasi":      "romanian",
   "c-timisoara": "romanian",
 };
 
-// ---------------------------------------------------------------------------
-// Fisher-Yates shuffle using seeded index picking (no external RNG dependency)
+
+
 
 function seededShuffle<T>(arr: T[], seed: number): T[] {
   const out = [...arr];

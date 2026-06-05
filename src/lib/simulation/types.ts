@@ -2,9 +2,9 @@ import type { DayPhase } from "./constants";
 
 export type SimAction = "sleep" | "work" | "eat" | "socialize" | "relax";
 
-// ---------------------------------------------------------------------------
-// Narration cache — keyed by npcId_day_phase so every (NPC, moment) gets its
-// own LLM-generated line without ever re-fetching the same moment twice.
+
+
+
 
 export type NarrationKey = `${string}_${number}_${DayPhase}`;
 export type NarrationCache = Record<NarrationKey, string>;

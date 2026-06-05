@@ -2,9 +2,9 @@ import type { CultureRegion, WorldCulture } from "./regions";
 import type { Rng } from "../randomness";
 import { randomInt } from "../randomness";
 
-// ---------------------------------------------------------------------------
-// All available roles in the simulation.
-// Narrator descriptions exist (or will exist) for each.
+
+
+
 
 export const ALL_ROLES = [
   "Developer", "Designer", "Architect", "Engineer", "Researcher",
@@ -17,10 +17,10 @@ export const ALL_ROLES = [
 
 export type SimRole = (typeof ALL_ROLES)[number];
 
-// ---------------------------------------------------------------------------
-// Base role weights per cultural region.
-// Values are relative frequencies (unnormalized — higher = more likely).
-// Omitted roles default to weight 1 (rare but possible).
+
+
+
+
 
 type RoleWeights = Partial<Record<SimRole, number>>;
 
@@ -123,10 +123,10 @@ const REGION_WEIGHTS: Record<CultureRegion, RoleWeights> = {
   },
 };
 
-// ---------------------------------------------------------------------------
-// Trait-based bonuses applied on top of base weights.
-// High artisticEnergy boosts Artist/Musician/DJ; high workIntensity boosts
-// Developer/Engineer; high nightlife boosts Bartender/DJ/Influencer, etc.
+
+
+
+
 
 function traitBonuses(culture: WorldCulture): Partial<Record<SimRole, number>> {
   const t = culture.traits;
@@ -152,8 +152,8 @@ function traitBonuses(culture: WorldCulture): Partial<Record<SimRole, number>> {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Weighted random pick
+
+
 
 function weightedPick(weights: Array<[SimRole, number]>, rng: Rng): SimRole {
   const total = weights.reduce((s, [, w]) => s + w, 0);
@@ -165,8 +165,8 @@ function weightedPick(weights: Array<[SimRole, number]>, rng: Rng): SimRole {
   return weights[weights.length - 1][0];
 }
 
-// ---------------------------------------------------------------------------
-// Main export — returns a non-repeating list of roles for an NPC cast
+
+
 
 export function pickRoles(
   culture: WorldCulture,
@@ -176,7 +176,7 @@ export function pickRoles(
   const base    = REGION_WEIGHTS[culture.region];
   const bonuses = traitBonuses(culture);
 
-  // Build final weight table: base weight (default 1) + trait bonus
+
   const table: Array<[SimRole, number]> = ALL_ROLES.map((role) => {
     const w = (base[role] ?? 1) + (bonuses[role] ?? 0);
     return [role, Math.max(1, w)];
@@ -186,7 +186,7 @@ export function pickRoles(
   const used = new Set<SimRole>();
 
   for (let i = 0; i < count; i++) {
-    // Remove already-picked roles to avoid duplicates
+
     const available = table.filter(([r]) => !used.has(r));
     const picked    = weightedPick(available, rng);
     result.push(picked);

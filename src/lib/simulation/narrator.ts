@@ -1,6 +1,6 @@
 import type { SimAction, MoodState } from "./types";
 
-// Role-specific action descriptions for NPC cards and feed
+
 const ROLE_ACTION: Partial<Record<string, Partial<Record<SimAction, string[]>>>> = {
   Architect: {
     work:      ["Reviewing blueprints", "Drafting site plans", "On a client call", "Running structural calculations"],
@@ -208,7 +208,7 @@ export function describeNpcAction(
   return pickFrom(options, nameSeed);
 }
 
-// Richer feed event text — used by eventBuilder for named role context
+
 export function buildFeedLine(
   name: string,
   role: string,
@@ -219,7 +219,7 @@ export function buildFeedLine(
   return `${name} — ${desc.toLowerCase()}`;
 }
 
-// "Right now" narration for the detail panel — seed includes day so it changes over time
+
 export function narrateRightNow(npc: {
   name: string;
   role: string;
@@ -245,7 +245,7 @@ export function narrateRightNow(npc: {
   return `${base}. ${colour}`;
 }
 
-// Short label for the NpcCard footer
+
 export function currentActionLabel(
   role: string,
   action: SimAction,
@@ -254,7 +254,7 @@ export function currentActionLabel(
   return describeNpcAction(role, action, nameSeed);
 }
 
-// Update `lastMajorEvent` based on current sim state (called from tick)
+
 export function computeLastMajorEvent(npc: {
   stress: number;
   mood: MoodState;
@@ -277,7 +277,7 @@ export function computeLastMajorEvent(npc: {
   return npc.lastMajorEvent;
 }
 
-// World-level mood line — shown in SimHeader and wherever world pressure is surfaced
+
 export function computeWorldMood(pressure: number): string {
   if (pressure > 0.75) return "The city is stretched thin";
   if (pressure > 0.58) return "Tension runs just below the surface";

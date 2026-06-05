@@ -1,5 +1,5 @@
-// Shared presentation-only mock data for the LifeSim UI shell.
-// NOTE: visual layer only — no simulation logic lives here.
+
+
 
 export type Mood = "calm" | "focused" | "stressed" | "content" | "restless" | "hopeful";
 
@@ -64,12 +64,12 @@ export const feed: FeedEvent[] = [
   { id: "e8", time: "13:47", text: "Lena began her shift at the hospital", kind: "work" },
 ];
 
-// Earth regions — procedural starting points for a simulated life.
-// Not literal geography for gameplay — coordinates only drive the globe view + a deterministic seed.
+
+
 export interface Region {
   id: string;
   name: string;
-  subtitle: string;       // e.g. "Northern Europe"
+  subtitle: string;       
   lat: number;
   lng: number;
   climate: string;

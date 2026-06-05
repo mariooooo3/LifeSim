@@ -31,7 +31,7 @@ export const narratePhase = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<Record<string, string[]> | null> => {
     if (!hasLLM() || data.situations.length === 0) return null;
 
-    // Each situation requests exactly as many lines as NPCs share its key.
+
     const countFor = (c: number) => Math.max(1, Math.min(6, c));
     const totalLines = data.situations.reduce((sum, s) => sum + countFor(s.count), 0);
 
@@ -59,8 +59,8 @@ export const narratePhase = createServerFn({ method: "POST" })
       `{"<key>":["..."], ...}\n\n` +
       sitLines;
 
-    // Budget output to the work actually requested: ~85 tokens per 2–3 sentence
-    // line, summed over every key's requested count (not a flat per-key number).
+
+
     const maxTokens = Math.min(4000, totalLines * 85 + 200);
 
     const text = await callLLM(prompt, maxTokens);
@@ -75,7 +75,7 @@ export const narratePhase = createServerFn({ method: "POST" })
       return null;
     }
 
-    // Normalize: keep only string arrays, coerce single strings to arrays.
+
     const out: Record<string, string[]> = {};
     for (const [key, val] of Object.entries(parsed)) {
       if (Array.isArray(val)) {

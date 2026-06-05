@@ -18,17 +18,17 @@ export interface Situation {
   moneyBand: MoneyBand;
   energyBand: EnergyBand;
   mood: string;
-  // Character + narrative colour — used to make each NPC's line distinct.
+
   trait: HiddenTrait;
   traitPhrase: string;
-  topMemory: string | null;        // text of the most defining memory
-  topMemoryType: string;           // "none" | MemoryType (in key for freshness)
+  topMemory: string | null;        
+  topMemoryType: string;           
   opportunityTitle: string | null;
-  opportunityType: string;         // "none" | OpportunityType (in key)
+  opportunityType: string;         
 }
 
-// Short human phrasings for the hidden trait — fed to the LLM and used in the
-// rule-based fallback so personality actually shows in the narration.
+
+
 export const TRAIT_PHRASE: Record<HiddenTrait, string> = {
   fearOfFailure:   "quietly afraid of falling short",
   jealous:         "prone to measuring themselves against others",
@@ -65,7 +65,7 @@ export function situationOf(npc: NPC, phase: DayPhase): Situation {
   const eBand = energyBand(npc.needs.energy);
 
   const opp = npc.activeOpportunity && !npc.activeOpportunity.resolved ? npc.activeOpportunity : null;
-  // memories are kept sorted by impact (highest first) in the sim tick.
+
   const mem = npc.memories.length > 0 ? npc.memories[0] : null;
 
   const key = [
@@ -225,7 +225,7 @@ function stateLines(sit: Situation): string[] {
   ];
 }
 
-// Short personality/memory tail so the fallback also feels individual.
+
 function memoryClause(type: string): string | null {
   switch (type) {
     case "success":          return "still buoyed by a recent win";
@@ -249,13 +249,13 @@ export function fallbackVariants(sit: Situation, count: number): string[] {
   const out: string[] = [];
   for (let i = 0; i < count; i++) {
     const a = actions[(seed + i) % actions.length];
-    // Each variant: an action sentence, a personality/memory beat, and a state
-    // beat — ~3 sentences, so the fallback matches the LLM's fuller length and
-    // each line still shows who this person is.
+
+
+
     const trait = `Still ${sit.traitPhrase}.`;
     const state = states[(seed + i) % states.length];
     const middle = mem ? `${cap(mem)}.` : trait;
-    // Avoid repeating the same beat twice when there's no memory to vary it.
+
     const end = mem || (seed + i) % 2 === 0 ? state : trait;
     out.push(middle === end ? `${a} ${middle}` : `${a} ${middle} ${end}`);
   }

@@ -3,18 +3,18 @@ import type { NPC } from "@/lib/simulation/types";
 import { currentActionLabel } from "@/lib/simulation/narrator";
 import { Avatar } from "./Avatar";
 
-// ---------------------------------------------------------------------------
-// City Life Map — a spatial view of the selected city. NPCs are placed in the
-// district that matches their current `location` and glide between districts
-// as the simulation moves them. Reads existing NPC state only; no simulation
-// logic lives here.
+
+
+
+
+
 
 interface Zone {
-  key: string;        // matches NPC.location
+  key: string;        
   label: string;
-  x: number;          // anchor, 0–100 (% of map width)
-  y: number;          // anchor, 0–100 (% of map height)
-  hue: number;        // accent hue for the district
+  x: number;          
+  y: number;          
+  hue: number;        
 }
 
 const ZONES: Zone[] = [
@@ -27,20 +27,20 @@ const ZONES: Zone[] = [
 
 const ZONE_BY_KEY: Record<string, Zone> = Object.fromEntries(ZONES.map((z) => [z.key, z]));
 
-// Roads connecting districts (anchor index pairs)
+
 const ROADS: [number, number][] = [
-  [0, 2], [1, 2], [3, 2], [4, 2], // spokes to the centre (Café)
-  [0, 1], [3, 4], [0, 3], [1, 4], // ring around the edge
+  [0, 2], [1, 2], [3, 2], [4, 2], 
+  [0, 1], [3, 4], [0, 3], [1, 4], 
 ];
 
-// Cluster offsets (% of map) for stacking multiple people in one district
-// without overlap. Modest horizontal spread to read roughly circular on 16:10.
+
+
 const CLUSTER: [number, number][] = [
   [0, 0], [-6, -7], [6, -7], [-9, 3], [9, 3], [0, 9],
   [-5, -13], [5, -13], [-11, -3], [11, -3], [-4, 14], [6, 13],
 ];
 
-// Day/night ambience by phase (8 phases → 4 times of day)
+
 function ambientFor(phaseIndex: number): {
   sky: string; ground: string; lights: number; label: string;
 } {
@@ -62,10 +62,10 @@ export function CityLifeMap({ npcs, selectedNpcId, phaseIndex, onSelect, isDimme
   const [hoverId, setHoverId] = useState<string | null>(null);
   const amb = ambientFor(phaseIndex);
 
-  // Position every NPC inside its district, assigning a stable cluster slot.
+
   const placed = useMemo(() => {
     const slotCounters: Record<string, number> = {};
-    // Sort by id so slot assignment is deterministic within a district.
+
     const ordered = [...npcs].sort((a, b) => a.id.localeCompare(b.id));
     return ordered.map((npc) => {
       const zone = ZONE_BY_KEY[npc.location] ?? ZONE_BY_KEY["Café"];
@@ -85,7 +85,7 @@ export function CityLifeMap({ npcs, selectedNpcId, phaseIndex, onSelect, isDimme
         transition: "background 1.5s ease",
       }}
     >
-      {/* Subtle terrain texture */}
+
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.12]"
         style={{
@@ -96,7 +96,7 @@ export function CityLifeMap({ npcs, selectedNpcId, phaseIndex, onSelect, isDimme
         aria-hidden
       />
 
-      {/* Roads */}
+
       <svg
         className="pointer-events-none absolute inset-0 h-full w-full"
         viewBox="0 0 100 100"
@@ -116,7 +116,7 @@ export function CityLifeMap({ npcs, selectedNpcId, phaseIndex, onSelect, isDimme
         ))}
       </svg>
 
-      {/* District blobs */}
+
       {ZONES.map((z) => {
         const lit = amb.lights;
         return (
@@ -126,7 +126,7 @@ export function CityLifeMap({ npcs, selectedNpcId, phaseIndex, onSelect, isDimme
             style={{ left: `${z.x}%`, top: `${z.y}%` }}
             aria-hidden
           >
-            {/* glow disc */}
+
             <div
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
               style={{
@@ -135,7 +135,7 @@ export function CityLifeMap({ npcs, selectedNpcId, phaseIndex, onSelect, isDimme
                 transition: "background 1.5s ease",
               }}
             />
-            {/* label + icon */}
+
             <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 translate-y-[34px] flex-col items-center gap-0.5">
               <ZoneIcon kind={z.key} hue={z.hue} lit={lit} />
               <span className="whitespace-nowrap text-[9px] uppercase tracking-[0.18em] text-foreground/45">
@@ -146,13 +146,13 @@ export function CityLifeMap({ npcs, selectedNpcId, phaseIndex, onSelect, isDimme
         );
       })}
 
-      {/* Time-of-day badge */}
+
       <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-background/30 px-2.5 py-1 backdrop-blur-sm">
         <span className="h-1.5 w-1.5 rounded-full" style={{ background: amb.lights > 0.5 ? "var(--warm)" : "var(--calm)" }} />
         <span className="text-[10px] uppercase tracking-[0.2em] text-foreground/60">{amb.label}</span>
       </div>
 
-      {/* People */}
+
       {placed.map(({ npc, x, y }) => {
         const isSelected = npc.id === selectedNpcId;
         const isHover = npc.id === hoverId;
@@ -185,7 +185,7 @@ export function CityLifeMap({ npcs, selectedNpcId, phaseIndex, onSelect, isDimme
                 >
                   <Avatar initials={npc.initials} hue={npc.hue} size={30} ring />
                 </div>
-                {/* mood pip */}
+
                 <span
                   className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full ring-2 ring-background"
                   style={{ background: moodColor(npc.mood) }}
@@ -200,8 +200,7 @@ export function CityLifeMap({ npcs, selectedNpcId, phaseIndex, onSelect, isDimme
               </span>
             </div>
 
-            {/* hover / selected caption — flips above for lower districts so it
-                never clips against the map's bottom edge */}
+
             {(isHover || isSelected) && (
               <div
                 className={`absolute left-1/2 z-40 w-max max-w-[160px] -translate-x-1/2 rounded-md bg-background/90 px-2 py-1 text-center shadow-lg backdrop-blur-sm ${
@@ -219,7 +218,7 @@ export function CityLifeMap({ npcs, selectedNpcId, phaseIndex, onSelect, isDimme
   );
 }
 
-// ---------------------------------------------------------------------------
+
 
 function moodColor(mood: NPC["mood"]): string {
   switch (mood) {

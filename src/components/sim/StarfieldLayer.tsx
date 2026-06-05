@@ -1,16 +1,16 @@
 import { useEffect, useRef } from "react";
 
-// ---------------------------------------------------------------------------
-// StarfieldLayer — animated canvas starfield, purely presentational.
-//
-// Props:
-//   count   — number of stars          (default 200)
-//   opacity — master opacity 0–1       (default 0.55)
-//   speed   — twinkle speed multiplier (default 1)
-//
-// Usage:
-//   <StarfieldLayer />                        full-screen absolute
-//   <StarfieldLayer count={80} opacity={0.3} />  subtle variant
+
+
+
+
+
+
+
+
+
+
+
 
 interface Props {
   count?: number;
@@ -27,7 +27,7 @@ export function StarfieldLayer({ count = 200, opacity = 0.55, speed = 1 }: Props
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Stable star data — generated once per mount
+
     const stars = Array.from({ length: count }, () => ({
       x:             Math.random(),
       y:             Math.random(),

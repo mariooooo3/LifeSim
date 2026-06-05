@@ -17,7 +17,7 @@ export interface CityTexture {
 }
 
 export const CITIES: City[] = [
-  // Europe
+
   { id: "c-stockholm",   name: "Stockholm",        country: "Sweden",           lat:  59.3,  lng:  18.1  },
   { id: "c-london",      name: "London",            country: "United Kingdom",   lat:  51.5,  lng:  -0.1  },
   { id: "c-paris",       name: "Paris",             country: "France",           lat:  48.9,  lng:   2.3  },
@@ -59,7 +59,7 @@ export const CITIES: City[] = [
   { id: "c-chisinau",    name: "Chișinău",          country: "Moldova",          lat:  47.0,  lng:  28.9  },
   { id: "c-sofia",       name: "Sofia",             country: "Bulgaria",         lat:  42.7,  lng:  23.3  },
 
-  // Middle East
+
   { id: "c-dubai",       name: "Dubai",             country: "UAE",              lat:  25.2,  lng:  55.3  },
   { id: "c-istanbul",    name: "Istanbul",          country: "Turkey",           lat:  41.0,  lng:  28.9  },
   { id: "c-tehran",      name: "Tehran",            country: "Iran",             lat:  35.7,  lng:  51.4  },
@@ -76,7 +76,7 @@ export const CITIES: City[] = [
   { id: "c-kabul",       name: "Kabul",             country: "Afghanistan",      lat:  34.5,  lng:  69.2  },
   { id: "c-damascus",    name: "Damascus",          country: "Syria",            lat:  33.5,  lng:  36.3  },
 
-  // South Asia
+
   { id: "c-mumbai",      name: "Mumbai",            country: "India",            lat:  19.1,  lng:  72.9  },
   { id: "c-delhi",       name: "Delhi",             country: "India",            lat:  28.7,  lng:  77.1  },
   { id: "c-bangalore",   name: "Bangalore",         country: "India",            lat:  13.0,  lng:  77.6  },
@@ -93,7 +93,7 @@ export const CITIES: City[] = [
   { id: "c-ahmedabad",   name: "Ahmedabad",         country: "India",            lat:  23.0,  lng:  72.6  },
   { id: "c-chittagong",  name: "Chittagong",        country: "Bangladesh",       lat:  22.4,  lng:  91.8  },
 
-  // East Asia
+
   { id: "c-tokyo",       name: "Tokyo",             country: "Japan",            lat:  35.7,  lng: 139.7  },
   { id: "c-beijing",     name: "Beijing",           country: "China",            lat:  39.9,  lng: 116.4  },
   { id: "c-shanghai",    name: "Shanghai",          country: "China",            lat:  31.2,  lng: 121.5  },
@@ -116,7 +116,7 @@ export const CITIES: City[] = [
   { id: "c-tianjin",     name: "Tianjin",           country: "China",            lat:  39.1,  lng: 117.2  },
   { id: "c-pyongyang",   name: "Pyongyang",         country: "North Korea",      lat:  39.0,  lng: 125.7  },
 
-  // Southeast Asia
+
   { id: "c-singapore",   name: "Singapore",         country: "Singapore",        lat:   1.4,  lng: 103.8  },
   { id: "c-bangkok",     name: "Bangkok",           country: "Thailand",         lat:  13.8,  lng: 100.5  },
   { id: "c-hcmc",        name: "Ho Chi Minh City",  country: "Vietnam",          lat:  10.8,  lng: 106.7  },
@@ -134,7 +134,7 @@ export const CITIES: City[] = [
   { id: "c-bandarwon",   name: "Bandar Seri Begawan", country: "Brunei",         lat:   4.9,  lng: 114.9  },
   { id: "c-dili",        name: "Dili",              country: "Timor-Leste",      lat:  -8.6,  lng: 125.6  },
 
-  // Central Asia & Russia
+
   { id: "c-moscow",      name: "Moscow",            country: "Russia",           lat:  55.8,  lng:  37.6  },
   { id: "c-stpetersburg",name: "Saint Petersburg",  country: "Russia",           lat:  59.9,  lng:  30.3  },
   { id: "c-almaty",      name: "Almaty",            country: "Kazakhstan",       lat:  43.3,  lng:  76.9  },
@@ -149,7 +149,7 @@ export const CITIES: City[] = [
   { id: "c-vladivostok", name: "Vladivostok",       country: "Russia",           lat:  43.1,  lng: 131.9  },
   { id: "c-irkutsk",     name: "Irkutsk",           country: "Russia",           lat:  52.3,  lng: 104.3  },
 
-  // Africa
+
   { id: "c-lagos",       name: "Lagos",             country: "Nigeria",          lat:   6.5,  lng:   3.4  },
   { id: "c-cairo",       name: "Cairo",             country: "Egypt",            lat:  30.0,  lng:  31.2  },
   { id: "c-nairobi",     name: "Nairobi",           country: "Kenya",            lat:  -1.3,  lng:  36.8  },
@@ -183,7 +183,7 @@ export const CITIES: City[] = [
   { id: "c-freetown",    name: "Freetown",          country: "Sierra Leone",     lat:   8.5,  lng: -13.2  },
   { id: "c-niamey",      name: "Niamey",            country: "Niger",            lat:  13.5,  lng:   2.1  },
 
-  // North America
+
   { id: "c-newyork",     name: "New York",          country: "USA",              lat:  40.7,  lng: -74.0  },
   { id: "c-losangeles",  name: "Los Angeles",       country: "USA",              lat:  34.1,  lng:-118.2  },
   { id: "c-chicago",     name: "Chicago",           country: "USA",              lat:  41.9,  lng: -87.6  },
@@ -210,7 +210,7 @@ export const CITIES: City[] = [
   { id: "c-calgary",     name: "Calgary",           country: "Canada",           lat:  51.0,  lng:-114.1  },
   { id: "c-santiagochile", name: "Santiago",        country: "Chile",            lat: -33.5,  lng: -70.7  },
 
-  // South America
+
   { id: "c-saopaulo",    name: "São Paulo",         country: "Brazil",           lat: -23.5,  lng: -46.6  },
   { id: "c-riodejaneiro",name: "Rio de Janeiro",    country: "Brazil",           lat: -22.9,  lng: -43.2  },
   { id: "c-buenosaires", name: "Buenos Aires",      country: "Argentina",        lat: -34.6,  lng: -58.4  },
@@ -227,7 +227,7 @@ export const CITIES: City[] = [
   { id: "c-guayaquil",   name: "Guayaquil",         country: "Ecuador",          lat:  -2.2,  lng: -79.9  },
   { id: "c-puntaarenas", name: "Punta Arenas",      country: "Chile",            lat: -53.2,  lng: -70.9  },
 
-  // Oceania
+
   { id: "c-sydney",      name: "Sydney",            country: "Australia",        lat: -33.9,  lng: 151.2  },
   { id: "c-melbourne",   name: "Melbourne",         country: "Australia",        lat: -37.8,  lng: 145.0  },
   { id: "c-brisbane",    name: "Brisbane",          country: "Australia",        lat: -27.5,  lng: 153.0  },
@@ -240,14 +240,14 @@ export const CITIES: City[] = [
   { id: "c-portmoresby", name: "Port Moresby",      country: "Papua New Guinea", lat:  -9.4,  lng: 147.2  },
   { id: "c-noumea",      name: "Nouméa",            country: "New Caledonia",    lat: -22.3,  lng: 166.5  },
 
-  // Edge of the world
+
   { id: "c-longyear",    name: "Longyearbyen",      country: "Norway (Svalbard)",lat:  78.2,  lng:  15.6  },
   { id: "c-anchorage",   name: "Anchorage",         country: "USA (Alaska)",     lat:  61.2,  lng:-149.9  },
 
-  // ---------------------------------------------------------------------------
-  // EXPANSION — compact format helper (id auto-derived below, explicit here)
 
-  // Europe — UK
+
+
+
   { id: "c-manchester",   name: "Manchester",       country: "United Kingdom", lat:  53.5, lng:  -2.2 },
   { id: "c-birmingham",   name: "Birmingham",       country: "United Kingdom", lat:  52.5, lng:  -1.9 },
   { id: "c-glasgow",      name: "Glasgow",          country: "United Kingdom", lat:  55.9, lng:  -4.3 },
@@ -259,7 +259,7 @@ export const CITIES: City[] = [
   { id: "c-cardiff",      name: "Cardiff",          country: "United Kingdom", lat:  51.5, lng:  -3.2 },
   { id: "c-belfast",      name: "Belfast",          country: "United Kingdom", lat:  54.6, lng:  -5.9 },
 
-  // Europe — France
+
   { id: "c-toulouse",     name: "Toulouse",         country: "France",         lat:  43.6, lng:   1.4 },
   { id: "c-bordeaux",     name: "Bordeaux",         country: "France",         lat:  44.8, lng:  -0.6 },
   { id: "c-lyon",         name: "Lyon",             country: "France",         lat:  45.7, lng:   4.8 },
@@ -270,7 +270,7 @@ export const CITIES: City[] = [
   { id: "c-lille",        name: "Lille",            country: "France",         lat:  50.6, lng:   3.1 },
   { id: "c-montpellier",  name: "Montpellier",      country: "France",         lat:  43.6, lng:   3.9 },
 
-  // Europe — Germany
+
   { id: "c-frankfurt",    name: "Frankfurt",        country: "Germany",        lat:  50.1, lng:   8.7 },
   { id: "c-stuttgart",    name: "Stuttgart",        country: "Germany",        lat:  48.8, lng:   9.2 },
   { id: "c-cologne",      name: "Cologne",          country: "Germany",        lat:  50.9, lng:   6.9 },
@@ -281,7 +281,7 @@ export const CITIES: City[] = [
   { id: "c-nuremberg",    name: "Nuremberg",        country: "Germany",        lat:  49.5, lng:  11.1 },
   { id: "c-hannover",     name: "Hannover",         country: "Germany",        lat:  52.4, lng:   9.7 },
 
-  // Europe — Italy
+
   { id: "c-naples",       name: "Naples",           country: "Italy",          lat:  40.8, lng:  14.3 },
   { id: "c-turin",        name: "Turin",            country: "Italy",          lat:  45.1, lng:   7.7 },
   { id: "c-florence",     name: "Florence",         country: "Italy",          lat:  43.8, lng:  11.2 },
@@ -292,7 +292,7 @@ export const CITIES: City[] = [
   { id: "c-catania",      name: "Catania",          country: "Italy",          lat:  37.5, lng:  15.1 },
   { id: "c-verona",       name: "Verona",           country: "Italy",          lat:  45.4, lng:  11.0 },
 
-  // Europe — Spain
+
   { id: "c-seville",      name: "Seville",          country: "Spain",          lat:  37.4, lng:  -5.9 },
   { id: "c-valencia",     name: "Valencia",         country: "Spain",          lat:  39.5, lng:  -0.4 },
   { id: "c-bilbao",       name: "Bilbao",           country: "Spain",          lat:  43.3, lng:  -2.9 },
@@ -301,21 +301,21 @@ export const CITIES: City[] = [
   { id: "c-granada",      name: "Granada",          country: "Spain",          lat:  37.2, lng:  -3.6 },
   { id: "c-alicante",     name: "Alicante",         country: "Spain",          lat:  38.3, lng:  -0.5 },
 
-  // Europe — Switzerland
+
   { id: "c-geneva",       name: "Geneva",           country: "Switzerland",    lat:  46.2, lng:   6.1 },
   { id: "c-bern",         name: "Bern",             country: "Switzerland",    lat:  46.9, lng:   7.4 },
   { id: "c-basel",        name: "Basel",            country: "Switzerland",    lat:  47.6, lng:   7.6 },
 
-  // Europe — Netherlands
+
   { id: "c-rotterdam",    name: "Rotterdam",        country: "Netherlands",    lat:  51.9, lng:   4.5 },
   { id: "c-thehague",     name: "The Hague",        country: "Netherlands",    lat:  52.1, lng:   4.3 },
   { id: "c-utrecht",      name: "Utrecht",          country: "Netherlands",    lat:  52.1, lng:   5.1 },
 
-  // Europe — Belgium
+
   { id: "c-antwerp",      name: "Antwerp",          country: "Belgium",        lat:  51.2, lng:   4.4 },
   { id: "c-ghent",        name: "Ghent",            country: "Belgium",        lat:  51.1, lng:   3.7 },
 
-  // Europe — Scandinavia
+
   { id: "c-gothenburg",   name: "Gothenburg",       country: "Sweden",         lat:  57.7, lng:  12.0 },
   { id: "c-malmo",        name: "Malmö",            country: "Sweden",         lat:  55.6, lng:  13.0 },
   { id: "c-bergen",       name: "Bergen",           country: "Norway",         lat:  60.4, lng:   5.3 },
@@ -326,7 +326,7 @@ export const CITIES: City[] = [
   { id: "c-odense",       name: "Odense",           country: "Denmark",        lat:  55.4, lng:  10.4 },
   { id: "c-linkoping",    name: "Linköping",        country: "Sweden",         lat:  58.4, lng:  15.6 },
 
-  // Europe — Poland
+
   { id: "c-krakow",       name: "Kraków",           country: "Poland",         lat:  50.1, lng:  20.0 },
   { id: "c-lodz",         name: "Łódź",             country: "Poland",         lat:  51.8, lng:  19.5 },
   { id: "c-wroclaw",      name: "Wrocław",          country: "Poland",         lat:  51.1, lng:  17.0 },
@@ -334,7 +334,7 @@ export const CITIES: City[] = [
   { id: "c-gdansk",       name: "Gdańsk",           country: "Poland",         lat:  54.4, lng:  18.6 },
   { id: "c-katowice",     name: "Katowice",         country: "Poland",         lat:  50.3, lng:  19.0 },
 
-  // Europe — Balkans & Eastern
+
   { id: "c-split",        name: "Split",            country: "Croatia",        lat:  43.5, lng:  16.4 },
   { id: "c-sarajevo",     name: "Sarajevo",         country: "Bosnia",         lat:  43.8, lng:  18.4 },
   { id: "c-skopje",       name: "Skopje",           country: "North Macedonia",lat:  42.0, lng:  21.4 },
@@ -354,7 +354,7 @@ export const CITIES: City[] = [
   { id: "c-andorra",      name: "Andorra la Vella", country: "Andorra",        lat:  42.5, lng:   1.5 },
   { id: "c-monaco",       name: "Monaco",           country: "Monaco",         lat:  43.7, lng:   7.4 },
 
-  // Middle East — additions
+
   { id: "c-izmir",        name: "İzmir",            country: "Turkey",         lat:  38.4, lng:  27.1 },
   { id: "c-bursa",        name: "Bursa",            country: "Turkey",         lat:  40.2, lng:  29.1 },
   { id: "c-antalya",      name: "Antalya",          country: "Turkey",         lat:  36.9, lng:  30.7 },
@@ -371,7 +371,7 @@ export const CITIES: City[] = [
   { id: "c-aden",         name: "Aden",             country: "Yemen",          lat:  12.8, lng:  45.0 },
   { id: "c-salalah",      name: "Salalah",          country: "Oman",           lat:  17.0, lng:  54.1 },
 
-  // South Asia — additions
+
   { id: "c-jaipur",       name: "Jaipur",           country: "India",          lat:  26.9, lng:  75.8 },
   { id: "c-surat",        name: "Surat",            country: "India",          lat:  21.2, lng:  72.8 },
   { id: "c-lucknow",      name: "Lucknow",          country: "India",          lat:  26.9, lng:  80.9 },
@@ -397,7 +397,7 @@ export const CITIES: City[] = [
   { id: "c-kandy",        name: "Kandy",            country: "Sri Lanka",      lat:   7.3, lng:  80.6 },
   { id: "c-pokhara",      name: "Pokhara",          country: "Nepal",          lat:  28.2, lng:  84.0 },
 
-  // East Asia — additions
+
   { id: "c-yokohama",     name: "Yokohama",         country: "Japan",          lat:  35.4, lng: 139.6 },
   { id: "c-nagoya",       name: "Nagoya",           country: "Japan",          lat:  35.2, lng: 136.9 },
   { id: "c-hiroshima",    name: "Hiroshima",        country: "Japan",          lat:  34.4, lng: 132.5 },
@@ -423,7 +423,7 @@ export const CITIES: City[] = [
   { id: "c-lanzhouCity",  name: "Lanzhou",          country: "China",          lat:  36.1, lng: 103.8 },
   { id: "c-macau",        name: "Macau",            country: "China",          lat:  22.2, lng: 113.5 },
 
-  // Southeast Asia — additions
+
   { id: "c-medan",        name: "Medan",            country: "Indonesia",      lat:   3.6, lng:  98.7 },
   { id: "c-bandung",      name: "Bandung",          country: "Indonesia",      lat:  -6.9, lng: 107.6 },
   { id: "c-semarang",     name: "Semarang",         country: "Indonesia",      lat:  -7.0, lng: 110.4 },
@@ -440,7 +440,7 @@ export const CITIES: City[] = [
   { id: "c-kotakinabalu", name: "Kota Kinabalu",    country: "Malaysia",       lat:   5.9, lng: 116.1 },
   { id: "c-penang",       name: "Penang",           country: "Malaysia",       lat:   5.4, lng: 100.3 },
 
-  // Central Asia — additions
+
   { id: "c-kazan",        name: "Kazan",            country: "Russia",         lat:  55.8, lng:  49.1 },
   { id: "c-nizhnynovg",   name: "Nizhny Novgorod",  country: "Russia",         lat:  56.3, lng:  44.0 },
   { id: "c-samara",       name: "Samara",           country: "Russia",         lat:  53.2, lng:  50.2 },
@@ -456,7 +456,7 @@ export const CITIES: City[] = [
   { id: "c-andijan",      name: "Andijan",          country: "Uzbekistan",     lat:  40.8, lng:  72.3 },
   { id: "c-shymkent",     name: "Shymkent",         country: "Kazakhstan",     lat:  42.3, lng:  69.6 },
 
-  // Africa — additions
+
   { id: "c-kano",         name: "Kano",             country: "Nigeria",        lat:  12.0, lng:   8.5 },
   { id: "c-ibadan",       name: "Ibadan",           country: "Nigeria",        lat:   7.4, lng:   3.9 },
   { id: "c-portharcourt", name: "Port Harcourt",    country: "Nigeria",        lat:   4.8, lng:   7.1 },
@@ -504,7 +504,7 @@ export const CITIES: City[] = [
   { id: "c-libreville",   name: "Libreville",       country: "Gabon",          lat:   0.4, lng:   9.5 },
   { id: "c-brazzaville",  name: "Brazzaville",      country: "Republic of Congo", lat: -4.3, lng: 15.3 },
 
-  // North America — additions
+
   { id: "c-nashville",    name: "Nashville",        country: "USA",            lat:  36.2, lng: -86.8 },
   { id: "c-baltimore",    name: "Baltimore",        country: "USA",            lat:  39.3, lng: -76.6 },
   { id: "c-saltlakecity", name: "Salt Lake City",   country: "USA",            lat:  40.8, lng:-111.9 },
@@ -548,7 +548,7 @@ export const CITIES: City[] = [
   { id: "c-bridgetown",   name: "Bridgetown",       country: "Barbados",       lat:  13.1, lng: -59.6 },
   { id: "c-portofspain",  name: "Port of Spain",    country: "Trinidad",       lat:  10.7, lng: -61.5 },
 
-  // South America — additions
+
   { id: "c-salvador",     name: "Salvador",         country: "Brazil",         lat: -12.9, lng: -38.5 },
   { id: "c-fortaleza",    name: "Fortaleza",        country: "Brazil",         lat:  -3.7, lng: -38.5 },
   { id: "c-manaus",       name: "Manaus",           country: "Brazil",         lat:  -3.1, lng: -60.0 },
@@ -575,7 +575,7 @@ export const CITIES: City[] = [
   { id: "c-cuencaEC",     name: "Cuenca",           country: "Ecuador",        lat:  -2.9, lng: -79.0 },
   { id: "c-cayenne",      name: "Cayenne",          country: "French Guiana",  lat:   4.9, lng: -52.3 },
 
-  // Oceania — additions
+
   { id: "c-goldcoast",    name: "Gold Coast",       country: "Australia",      lat: -28.0, lng: 153.4 },
   { id: "c-canberra",     name: "Canberra",         country: "Australia",      lat: -35.3, lng: 149.1 },
   { id: "c-hobart",       name: "Hobart",           country: "Australia",      lat: -42.9, lng: 147.3 },
@@ -592,15 +592,15 @@ export const CITIES: City[] = [
   { id: "c-portvila",     name: "Port Vila",        country: "Vanuatu",        lat: -17.7, lng: 168.3 },
 ];
 
-// ---------------------------------------------------------------------------
-// Search
 
-// Normalize: strip diacritics so "Iasi" matches "Iași", "Malmo" matches "Malmö", etc.
+
+
+
 function normalize(s: string): string {
   return s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 }
 
-// Pre-compute normalized names for performance
+
 const _normalized = CITIES.map((city) => ({
   city,
   n: normalize(city.name),
@@ -630,8 +630,8 @@ export function getCityById(id: string): City | undefined {
   return CITIES.find((c) => c.id === id);
 }
 
-// ---------------------------------------------------------------------------
-// Texture derivation — entirely from worldSeed, no hard-coded labels per city
+
+
 
 function climateFor(lat: number): string {
   const a = Math.abs(lat);
@@ -678,8 +678,8 @@ export function deriveCityTexture(city: City): CityTexture {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Local time — approximate from longitude (±30min accuracy, enough for feel)
+
+
 
 export function cityLocalTime(lng: number): string {
   const offsetH = Math.round(lng / 15);
@@ -703,8 +703,8 @@ export function cityTimeOfDay(lng: number): "night" | "evening" | "morning" | "d
   return "day";
 }
 
-// ---------------------------------------------------------------------------
-// Featured suggestions — one per major region, shown when search is empty
+
+
 
 export const FEATURED_CITIES: City[] = [
   CITIES.find((c) => c.id === "c-iasi")!,

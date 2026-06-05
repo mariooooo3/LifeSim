@@ -9,7 +9,7 @@ interface FetchInput {
   day: number;
   phase: DayPhase;
   situations: Situation[];
-  /** situationKey → how many NPCs in the cast currently share that key */
+
   counts: Record<string, number>;
   worldSeed: WorldSeed;
   worldPressure?: number;
@@ -39,7 +39,7 @@ export async function fetchNarrationVariants({
         worldPressure,
         situations: situations.map((s) => ({
           key: s.key,
-          // Ask for exactly as many lines as NPCs sit on this key.
+
           count: variantCountFor(s.key, counts),
           role: s.role,
           action: s.action,

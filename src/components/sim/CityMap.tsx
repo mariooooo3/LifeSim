@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from "react";
-import type { Map as MlMap, Marker as MlMarker, StyleSpecification } from "maplibre-gl";
+import type { Map as MlMap, Marker as MlMarker, GeoJSONSource, StyleSpecification } from "maplibre-gl";
 import type { NPC } from "@/lib/simulation/types";
 import type { PlayerProfile, PlayerState } from "@/store/useLifeSimStore";
+import { PHASE_DURATION_MS } from "@/lib/simulation/constants";
+import {
+  buildCurvedPath,
+  positionOnPath,
+  easeInOutSine,
+  laneFromId,
+  type CurvedPath,
+} from "@/lib/routing/paths";
 
-// ---------------------------------------------------------------------------
-// CityMap — MapLibre + CARTO dark tiles over the existing simulation.
-// NPCs glide between districts with simple lerp. No GIS, no pathfinding.
-
-const CARTO_DARK: StyleSpecification = {
+const CARTO_LIGHT: StyleSpecification = {
   version: 8,
   sources: {
     carto: {
@@ -28,8 +32,6 @@ const CARTO_DARK: StyleSpecification = {
   ],
 };
 
-// ---------------------------------------------------------------------------
-
 const DISTRICTS: Record<string, [number, number]> = {
   Home:   [-1,  1],
   Office: [ 1,  1],
@@ -38,13 +40,32 @@ const DISTRICTS: Record<string, [number, number]> = {
   Bar:    [ 1, -1],
 };
 
-const DISTRICT_SPREAD = 0.0085;
-const JITTER = 0.0016;
+// Roomier layout so avatars and labels breathe.
+const DISTRICT_SPREAD = 0.026;
+const JITTER = 0.0052;
 
-const CLUSTER: [number, number][] = [
-  [0, 0], [-1, -0.7], [1, -0.7], [-1.3, 0.6], [1.3, 0.6], [0, 1.2],
-  [-1.7, -1.5], [1.7, -1.5], [-2, 0.2], [2, 0.2], [-0.6, 2], [0.9, 1.9],
-];
+// Even, airy intra-district placement via a golden-angle spiral.
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+const CLUSTER: [number, number][] = Array.from({ length: 14 }, (_, i) => {
+  const r = i === 0 ? 0 : 0.55 + 0.42 * Math.sqrt(i);
+  const a = i * GOLDEN_ANGLE;
+  return [r * Math.cos(a), r * Math.sin(a)] as [number, number];
+});
+
+// Travel time at 1× speed. Tuned for a brisk, lively glide (~40% of the phase)
+// — fast enough to never read as slow-motion, smooth enough (with sine easing)
+// to feel fluid. Progress is scaled by live speed, so x2/x4 stay in sync.
+const TRAVEL_MS = PHASE_DURATION_MS * 0.4;
+
+interface Walker {
+  cur: [number, number];      // live visual position
+  target: [number, number];   // destination
+  targetKey: string;          // change-detection key
+  path: CurvedPath | null;    // active arc (kept after arrival for route display)
+  t: number;                  // progress along path, 0..1
+  lane: number;               // deterministic perpendicular offset
+  hue: number;
+}
 
 function moodColor(mood: NPC["mood"]): string {
   switch (mood) {
@@ -54,6 +75,11 @@ function moodColor(mood: NPC["mood"]): string {
     case "hopeful":  return "var(--grow)";
     default:         return "var(--calm)";
   }
+}
+
+// Route line colour for MapLibre paint (HSL — MapLibre's parser has no oklch).
+function routeColor(hue: number): string {
+  return `hsl(${Math.round(hue)}, 75%, 58%)`;
 }
 
 function ambientTint(phaseIndex: number): string {
@@ -72,31 +98,44 @@ interface Props {
   isDimmed?: (npc: NPC) => boolean;
   player?: PlayerProfile | null;
   playerState?: PlayerState | null;
+  speed?: number;
 }
 
 type MapStatus = "loading" | "ok" | "fallback";
 
-export function CityMap({ npcs, center, selectedNpcId, phaseIndex, onSelect, isDimmed, player, playerState }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef    = useRef<MlMap | null>(null);
-  const mlRef     = useRef<typeof import("maplibre-gl") | null>(null);
-  const markersRef = useRef(new Map<string, MlMarker>());
-  const posRef     = useRef(new Map<string, { cur: [number, number]; target: [number, number] }>());
-  const lastEasedRef = useRef<string | null>(null);
+export function CityMap({
+  npcs, center, selectedNpcId, phaseIndex, onSelect, isDimmed,
+  player, playerState, speed = 1,
+}: Props) {
+  const containerRef    = useRef<HTMLDivElement>(null);
+  const mapRef          = useRef<MlMap | null>(null);
+  const mlRef           = useRef<typeof import("maplibre-gl") | null>(null);
+  const markersRef      = useRef(new Map<string, MlMarker>());
+  const walkersRef      = useRef(new Map<string, Walker>());
+  const lastEasedRef    = useRef<string | null>(null);
   const playerMarkerRef = useRef<MlMarker | null>(null);
-  const playerPosRef = useRef<{ cur: [number, number]; target: [number, number] } | null>(null);
+  const playerWalkerRef = useRef<Walker | null>(null);
+
+  const speedRef = useRef(speed);
+  speedRef.current = speed;
+
+  // Live mirrors of selection/hover for the rAF + sync closures.
+  const selectedIdRef  = useRef<string | null>(selectedNpcId);
+  selectedIdRef.current = selectedNpcId;
+  const hoveredIdRef   = useRef<string | null>(null);
+  const prevSelectedRef = useRef<string | null>(selectedNpcId);
+  const routeDirtyRef  = useRef(true);
 
   const [mapStatus, setMapStatus] = useState<MapStatus>("loading");
 
-  // syncRef holds the latest prop-reading closure so the one-time mount effect
-  // never goes stale.
+  const cosLat = Math.cos(center.lat * Math.PI / 180) || 1;
+
   const syncRef = useRef<() => void>(() => {});
   syncRef.current = () => {
     const ml  = mlRef.current;
     const map = mapRef.current;
     if (!ml || !map) return;
 
-    const cosLat = Math.cos(center.lat * Math.PI / 180) || 1;
     const slotByDistrict: Record<string, number> = {};
     const ordered = [...npcs].sort((a, b) => a.id.localeCompare(b.id));
     const liveIds = new Set<string>();
@@ -111,62 +150,114 @@ export function CityMap({ npcs, center, selectedNpcId, phaseIndex, onSelect, isD
       const lng = center.lng + (dir[0] * DISTRICT_SPREAD + cx * JITTER) / cosLat;
       const lat = center.lat + (dir[1] * DISTRICT_SPREAD + cy * JITTER);
       const target: [number, number] = [lng, lat];
+      const targetKey = `${target[0].toFixed(5)},${target[1].toFixed(5)}`;
 
-      const pos = posRef.current.get(npc.id);
-      if (pos) { pos.target = target; }
-      else posRef.current.set(npc.id, { cur: [...target] as [number, number], target });
+      let walker = walkersRef.current.get(npc.id);
+      if (!walker) {
+        // Spawn in place — no travel animation on first appearance.
+        walker = {
+          cur: [...target] as [number, number],
+          target,
+          targetKey,
+          path: null,
+          t: 1,
+          lane: laneFromId(npc.id),
+          hue: npc.hue,
+        };
+        walkersRef.current.set(npc.id, walker);
+      } else if (walker.targetKey !== targetKey) {
+        // Destination changed → start travelling immediately from current
+        // visual position. Synchronous: no network, no freeze, no delay.
+        walker.path = buildCurvedPath(walker.cur, target, walker.lane, cosLat);
+        walker.t = 0;
+        walker.target = target;
+        walker.targetKey = targetKey;
+        if (npc.id === selectedIdRef.current || npc.id === hoveredIdRef.current) {
+          routeDirtyRef.current = true;
+        }
+      }
 
       let marker = markersRef.current.get(npc.id);
       if (!marker) {
         const el = buildMarkerEl(npc);
         el.addEventListener("click", (e) => { e.stopPropagation(); onSelect(npc.id); });
-        marker = new ml.Marker({ element: el, anchor: "center" }).setLngLat(target).addTo(map);
+        el.addEventListener("mouseenter", () => {
+          hoveredIdRef.current = npc.id;
+          routeDirtyRef.current = true;
+        });
+        el.addEventListener("mouseleave", () => {
+          if (hoveredIdRef.current === npc.id) {
+            hoveredIdRef.current = null;
+            routeDirtyRef.current = true;
+          }
+        });
+        marker = new ml.Marker({ element: el, anchor: "center" }).setLngLat(walker.cur).addTo(map);
         markersRef.current.set(npc.id, marker);
       }
       updateMarkerEl(marker.getElement(), npc, npc.id === selectedNpcId, isDimmed?.(npc) ?? false);
     }
 
+    // Remove markers/walkers for NPCs that no longer exist.
     for (const [id, marker] of markersRef.current) {
       if (!liveIds.has(id)) {
         marker.remove();
         markersRef.current.delete(id);
-        posRef.current.delete(id);
+        walkersRef.current.delete(id);
+        routeDirtyRef.current = true;
       }
     }
 
+    // Selection changed → re-fly + refresh route layer.
+    if (selectedNpcId !== prevSelectedRef.current) {
+      routeDirtyRef.current = true;
+      prevSelectedRef.current = selectedNpcId;
+    }
     if (selectedNpcId && selectedNpcId !== lastEasedRef.current) {
-      const p = posRef.current.get(selectedNpcId);
-      if (p) map.easeTo({ center: p.target, duration: 850, zoom: Math.max(map.getZoom(), 13.5) });
+      const w = walkersRef.current.get(selectedNpcId);
+      if (w) map.easeTo({ center: w.target, duration: 850, zoom: Math.max(map.getZoom(), 13) });
     }
     lastEasedRef.current = selectedNpcId;
 
-    // Player marker
+    // Player marker / walker.
     if (player && playerState) {
       const dir = DISTRICTS[playerState.location] ?? DISTRICTS["Home"];
-      const cosLat = Math.cos(center.lat * Math.PI / 180) || 1;
       const pLng = center.lng + (dir[0] * DISTRICT_SPREAD * 0.6) / cosLat;
       const pLat = center.lat + (dir[1] * DISTRICT_SPREAD * 0.6);
       const pTarget: [number, number] = [pLng, pLat];
+      const pKey = `${pTarget[0].toFixed(5)},${pTarget[1].toFixed(5)}`;
 
       if (!playerMarkerRef.current) {
         const el = buildPlayerMarkerEl(player);
         playerMarkerRef.current = new ml.Marker({ element: el, anchor: "center" })
           .setLngLat(pTarget)
           .addTo(map);
-        playerPosRef.current = { cur: [...pTarget] as [number, number], target: pTarget };
+        playerWalkerRef.current = {
+          cur: [...pTarget] as [number, number],
+          target: pTarget,
+          targetKey: pKey,
+          path: null,
+          t: 1,
+          lane: laneFromId(player.name || "player"),
+          hue: 50,
+        };
       } else {
-        if (playerPosRef.current) playerPosRef.current.target = pTarget;
+        const pw = playerWalkerRef.current;
+        if (pw && pw.targetKey !== pKey) {
+          pw.path = buildCurvedPath(pw.cur, pTarget, pw.lane, cosLat);
+          pw.t = 0;
+          pw.target = pTarget;
+          pw.targetKey = pKey;
+        }
         const nameEl = playerMarkerRef.current.getElement().querySelector<HTMLElement>(".lsm-pname");
         if (nameEl) nameEl.textContent = player.name.split(" ")[0];
       }
     } else if (!player && playerMarkerRef.current) {
       playerMarkerRef.current.remove();
       playerMarkerRef.current = null;
-      playerPosRef.current = null;
+      playerWalkerRef.current = null;
     }
   };
 
-  // ---- Mount once -----------------------------------------------------------
   useEffect(() => {
     let cancelled = false;
     let raf = 0;
@@ -174,24 +265,17 @@ export function CityMap({ npcs, center, selectedNpcId, phaseIndex, onSelect, isD
     let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
 
     (async () => {
-      // ---- 1. Import library
       let ml: typeof import("maplibre-gl");
       try {
-        // Inject MapLibre CSS from installed package, with CDN fallback.
         if (!document.querySelector("#maplibre-css")) {
           const link = document.createElement("link");
           link.id = "maplibre-css";
           link.rel = "stylesheet";
-          // Primary: jsdelivr (fast, no rate-limiting); fallback: unpkg
           link.href = "https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css";
-          link.onerror = () => {
-            link.href = "https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css";
-          };
+          link.onerror = () => { link.href = "https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css"; };
           document.head.appendChild(link);
         }
-
         const mod = await import("maplibre-gl");
-        // maplibre-gl ships a UMD bundle; Vite wraps it as `.default`.
         ml = ((mod as unknown as { default?: typeof import("maplibre-gl") }).default ?? mod) as typeof import("maplibre-gl");
       } catch (err) {
         if (!cancelled) setMapStatus("fallback");
@@ -201,15 +285,14 @@ export function CityMap({ npcs, center, selectedNpcId, phaseIndex, onSelect, isD
       if (cancelled || !containerRef.current) return;
       mlRef.current = ml;
 
-      // ---- 2. Create map
       let map: MlMap;
       try {
         map = new ml.Map({
           container: containerRef.current,
-          style: CARTO_DARK,
+          style: CARTO_LIGHT,
           center: [center.lng, center.lat],
-          zoom: 13,
-          minZoom: 11,
+          zoom: 11.6,
+          minZoom: 10,
           maxZoom: 16.5,
           dragRotate: false,
           pitchWithRotate: false,
@@ -223,10 +306,6 @@ export function CityMap({ npcs, center, selectedNpcId, phaseIndex, onSelect, isD
       mapRef.current = map;
       map.touchZoomRotate.disableRotation();
 
-      // ---- 3. Status transitions
-      // "idle" fires after all pending tiles have loaded and animations settled —
-      // this is the correct moment. "render" fires on the first WebGL frame which
-      // is just the black background (#0a0c14) before any tiles arrive.
       map.once("idle", () => {
         if (!cancelled) {
           setMapStatus("ok");
@@ -234,50 +313,127 @@ export function CityMap({ npcs, center, selectedNpcId, phaseIndex, onSelect, isD
         }
       });
 
-      // If tiles don't load within 8s (provider blocked / offline) → fallback.
-      fallbackTimer = setTimeout(() => {
-        if (!cancelled) setMapStatus("fallback");
-      }, 8000);
+      fallbackTimer = setTimeout(() => { if (!cancelled) setMapStatus("fallback"); }, 8000);
 
       map.on("error", (e) => {
         console.warn("[CityMap] error:", (e as { error?: { message?: string } })?.error?.message ?? e);
       });
 
-      // ---- 4. Resize — container uses `height: clamp(...)` which is stable,
-      //    but MapLibre reads dimensions synchronously at construction time, so
-      //    we resize on load + after two frames + via ResizeObserver.
       const doResize = () => { if (!cancelled) mapRef.current?.resize(); };
-      map.once("load", doResize);
-      requestAnimationFrame(() => requestAnimationFrame(doResize));
       ro = new ResizeObserver(doResize);
       ro.observe(containerRef.current);
+      requestAnimationFrame(() => requestAnimationFrame(doResize));
 
-      // ---- 5. Initial markers
+      map.once("load", () => {
+        if (cancelled) return;
+        map.addSource("npc-routes", {
+          type: "geojson",
+          data: { type: "FeatureCollection", features: [] },
+        });
+        // Soft halo — only under the prominent (selected/hovered) route.
+        map.addLayer({
+          id: "npc-routes-halo",
+          type: "line",
+          source: "npc-routes",
+          layout: { "line-join": "round", "line-cap": "round" },
+          paint: {
+            "line-color": ["get", "color"],
+            "line-width": 8,
+            "line-opacity": ["case", ["get", "prominent"], 0.18, 0],
+            "line-blur": 3,
+          },
+        });
+        // Main line: every moving NPC draws a subtle trail; the selected/hovered
+        // one is brighter and thicker so it stands out without clutter.
+        map.addLayer({
+          id: "npc-routes-line",
+          type: "line",
+          source: "npc-routes",
+          layout: { "line-join": "round", "line-cap": "round" },
+          paint: {
+            "line-color": ["get", "color"],
+            "line-width": ["case", ["get", "prominent"], 2.6, 1.7],
+            "line-opacity": ["case", ["get", "prominent"], 0.92, 0.34],
+          },
+        });
+        doResize();
+      });
+
       syncRef.current();
 
-      // ---- 6. Lerp loop
+      const buildRouteFeatures = () => {
+        const selId = selectedIdRef.current;
+        const hovId = hoveredIdRef.current;
+        const features: GeoJSON.Feature[] = [];
+
+        const push = (id: string | null, w: Walker | null | undefined) => {
+          if (!w || !w.path) return;
+          const prominent = id !== null && (id === selId || id === hovId);
+          const active = w.t < 1;             // still travelling
+          // Show every actively-moving NPC's trail; keep the prominent route
+          // visible even after arrival so selecting it always reveals the path.
+          if (!prominent && !active) return;
+          features.push({
+            type: "Feature" as const,
+            properties: { color: routeColor(w.hue), prominent },
+            geometry: { type: "LineString" as const, coordinates: w.path.points },
+          });
+        };
+
+        for (const [id, w] of walkersRef.current) push(id, w);
+        push(null, playerWalkerRef.current);
+        return features;
+      };
+
+      const updateRouteGeoJson = () => {
+        const src = mapRef.current?.getSource("npc-routes") as GeoJSONSource | undefined;
+        if (!src) return;
+        src.setData({ type: "FeatureCollection", features: buildRouteFeatures() });
+      };
+
+      const advance = (w: Walker, marker: MlMarker, dtSp: number) => {
+        if (w.path && w.t < 1) {
+          w.t = Math.min(1, w.t + dtSp / TRAVEL_MS);
+          const e = easeInOutSine(w.t);
+          const pos = positionOnPath(w.path, e);
+          w.cur[0] = pos[0];
+          w.cur[1] = pos[1];
+          marker.setLngLat(w.cur);
+        }
+      };
+
+      let prevFrameTime = performance.now();
       const tick = () => {
-        for (const [id, p] of posRef.current) {
+        const now = performance.now();
+        const dt  = Math.min(now - prevFrameTime, 100);
+        prevFrameTime = now;
+        const dtSp = dt * speedRef.current;
+
+        let anyMoving = false;
+        for (const [id, w] of walkersRef.current) {
           const marker = markersRef.current.get(id);
           if (!marker) continue;
-          const dx = p.target[0] - p.cur[0];
-          const dy = p.target[1] - p.cur[1];
-          if (Math.abs(dx) > 1e-7 || Math.abs(dy) > 1e-7) {
-            p.cur[0] += dx * 0.06;
-            p.cur[1] += dy * 0.06;
-            marker.setLngLat(p.cur);
-          }
+          const wasMoving = !!w.path && w.t < 1;
+          advance(w, marker, dtSp);
+          if (wasMoving) anyMoving = true;
         }
-        const pp = playerPosRef.current;
-        if (pp && playerMarkerRef.current) {
-          const dx = pp.target[0] - pp.cur[0];
-          const dy = pp.target[1] - pp.cur[1];
-          if (Math.abs(dx) > 1e-7 || Math.abs(dy) > 1e-7) {
-            pp.cur[0] += dx * 0.06;
-            pp.cur[1] += dy * 0.06;
-            playerMarkerRef.current.setLngLat(pp.cur);
-          }
+
+        const pw = playerWalkerRef.current;
+        if (pw && playerMarkerRef.current) {
+          const pwMoving = !!pw.path && pw.t < 1;
+          advance(pw, playerMarkerRef.current, dtSp);
+          if (pwMoving) anyMoving = true;
         }
+
+        // While anyone is travelling, refresh the route set each frame so trails
+        // appear on departure and clear on arrival.
+        if (anyMoving) routeDirtyRef.current = true;
+
+        if (routeDirtyRef.current) {
+          updateRouteGeoJson();
+          routeDirtyRef.current = false;
+        }
+
         raf = requestAnimationFrame(tick);
       };
       raf = requestAnimationFrame(tick);
@@ -290,19 +446,18 @@ export function CityMap({ npcs, center, selectedNpcId, phaseIndex, onSelect, isD
       ro?.disconnect();
       markersRef.current.forEach((m) => m.remove());
       markersRef.current.clear();
-      posRef.current.clear();
+      walkersRef.current.clear();
       playerMarkerRef.current?.remove();
       playerMarkerRef.current = null;
+      playerWalkerRef.current = null;
       mapRef.current?.remove();
       mapRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Re-sync when props change
   useEffect(() => { syncRef.current(); });
 
-  // Recenter when city changes
   useEffect(() => {
     mapRef.current?.easeTo({ center: [center.lng, center.lat], duration: 600 });
   }, [center.lat, center.lng]);
@@ -312,17 +467,12 @@ export function CityMap({ npcs, center, selectedNpcId, phaseIndex, onSelect, isD
       className="relative w-full overflow-hidden rounded-2xl hairline"
       style={{ height: "clamp(420px, 62vh, 640px)", background: "#f5f5f0" }}
     >
-      {/* Fallback city layout: shown while loading OR when tiles fail.
-          Always sits at z-[1] so MapLibre can fade in on top of it.
-          This ensures the user never sees a plain black rectangle. */}
       {mapStatus !== "ok" && (
         <div className="absolute inset-0 z-[1]">
           <FallbackCityLayout npcs={npcs} selectedNpcId={selectedNpcId} onSelect={onSelect} />
         </div>
       )}
 
-      {/* MapLibre canvas container: always in the DOM so the map can initialise,
-          but invisible (opacity 0) until idle fires with real tile data. */}
       <div
         ref={containerRef}
         style={{
@@ -334,7 +484,6 @@ export function CityMap({ npcs, center, selectedNpcId, phaseIndex, onSelect, isD
         }}
       />
 
-      {/* Loading indicator — only while tiles are in-flight */}
       {mapStatus === "loading" && (
         <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center">
           <div className="flex items-center gap-2 rounded-full bg-background/80 px-4 py-2 text-xs text-muted-foreground backdrop-blur-sm">
@@ -344,7 +493,6 @@ export function CityMap({ npcs, center, selectedNpcId, phaseIndex, onSelect, isD
         </div>
       )}
 
-      {/* Day/night tint — above map, below vignette */}
       {mapStatus === "ok" && (
         <div
           className="pointer-events-none absolute inset-0 z-[3] transition-[background] duration-1000"
@@ -353,10 +501,9 @@ export function CityMap({ npcs, center, selectedNpcId, phaseIndex, onSelect, isD
         />
       )}
 
-      {/* Cinematic vignette — topmost decorative layer */}
       <div
         className="pointer-events-none absolute inset-0 z-[5]"
-        style={{ boxShadow: "inset 0 0 60px 10px rgba(0,0,0,0.55)" }}
+        style={{ boxShadow: "inset 0 0 80px 6px rgba(0,0,0,0.42)" }}
         aria-hidden
       />
 
@@ -417,9 +564,6 @@ export function CityMap({ npcs, center, selectedNpcId, phaseIndex, onSelect, isD
   );
 }
 
-// ---------------------------------------------------------------------------
-// Fallback — shown if MapLibre/tiles fail.
-
 function FallbackCityLayout({ npcs, selectedNpcId, onSelect }: {
   npcs: NPC[];
   selectedNpcId: string | null;
@@ -476,9 +620,6 @@ function FallbackCityLayout({ npcs, selectedNpcId, onSelect }: {
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Imperative marker helpers
 
 function buildMarkerEl(npc: NPC): HTMLDivElement {
   const wrap = document.createElement("div");

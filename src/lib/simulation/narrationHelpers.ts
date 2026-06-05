@@ -2,16 +2,16 @@ import type { NPC } from "./types";
 import type { DayPhase } from "./constants";
 import type { WorldSeed } from "./worldSeed";
 
-// ---------------------------------------------------------------------------
-// Deterministic pick — same NPC always selects the same index from each pool,
-// so narration stays consistent within a phase even if rendered twice.
+
+
+
 
 function pick<T>(arr: T[], seed: number): T {
   return arr[Math.abs(seed) % arr.length];
 }
 
-// ---------------------------------------------------------------------------
-// Phase → plain-language time label
+
+
 
 function phaseLabel(phase: DayPhase): string {
   switch (phase) {
@@ -26,8 +26,8 @@ function phaseLabel(phase: DayPhase): string {
   }
 }
 
-// ---------------------------------------------------------------------------
-// What the NPC is doing right now — action × phase × role-aware
+
+
 
 function describeAction(npc: NPC, phase: DayPhase): string {
   const seed = npc.name.charCodeAt(0) + npc.id.charCodeAt(npc.id.length - 1);
@@ -93,8 +93,8 @@ function describeAction(npc: NPC, phase: DayPhase): string {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Inner state — emotional colour drawn from mood + stress + needs
+
+
 
 function describeInnerState(npc: NPC): string {
   const seed = (npc.name.charCodeAt(1) ?? npc.name.charCodeAt(0)) + npc.stress;
@@ -155,8 +155,8 @@ function describeInnerState(npc: NPC): string {
   ], seed);
 }
 
-// ---------------------------------------------------------------------------
-// What's pressing — surfaces the single most salient external stressor
+
+
 
 function describePressure(npc: NPC, worldSeed: WorldSeed, day: number): string | null {
   const seed = day + npc.name.charCodeAt(0);
@@ -186,7 +186,7 @@ function describePressure(npc: NPC, worldSeed: WorldSeed, day: number): string |
       "The regret is starting to accumulate.",
     ], seed);
 
-  // Surface the most recent meaningful memory
+
   const lastMemory = [...npc.memories]
     .reverse()
     .find((m) => m.type === "success" || m.type === "conflict" || m.type === "financialStress");
@@ -202,8 +202,8 @@ function describePressure(npc: NPC, worldSeed: WorldSeed, day: number): string |
   return null;
 }
 
-// ---------------------------------------------------------------------------
-// Main export — assembles the three layers into a 2–3 sentence narration
+
+
 
 export function buildNarration(
   npc: NPC,

@@ -1,19 +1,19 @@
 import { useId } from "react";
 
-// ---------------------------------------------------------------------------
-// MiniGlobeBackdrop — CSS/SVG wireframe globe, purely presentational.
-//
-// Props:
-//   size    — diameter in px      (default 480)
-//   opacity — master opacity 0–1  (default 0.16)
-//   style   — extra inline styles on the root div
-//
-// The component is self-contained. Apply blur from outside:
-//   <div style={{ filter: "blur(28px)" }}>
-//     <MiniGlobeBackdrop />
-//   </div>
-//
-// Rotation uses the `orbit-spin` keyframe that already lives in styles.css.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 interface Props {
   size?: number;
@@ -22,12 +22,12 @@ interface Props {
 }
 
 export function MiniGlobeBackdrop({ size = 480, opacity = 0.16, style }: Props) {
-  // Unique clip-path id — safe even when rendered multiple times on a page
+
   const uid = useId().replace(/:/g, "");
   const r   = size / 2;
 
-  // Latitude lines: y = r − sin(deg) * r, rx = cos(deg) * r
-  // The ry is kept intentionally flat (orthographic projection reads "flat")
+
+
   const lats = [-60, -30, 0, 30, 60].map((deg) => {
     const rad = (deg * Math.PI) / 180;
     return {
@@ -37,7 +37,7 @@ export function MiniGlobeBackdrop({ size = 480, opacity = 0.16, style }: Props) 
     };
   });
 
-  // Meridian ellipses: rx = sin(lon) * r, ry = r
+
   const meridians = [30, 60, 90, 120, 150].map((lon) => ({
     rx: Math.sin((lon * Math.PI) / 180) * r * 0.995,
     ry: r * 0.995,
@@ -55,7 +55,7 @@ export function MiniGlobeBackdrop({ size = 480, opacity = 0.16, style }: Props) 
         ...style,
       }}
     >
-      {/* Atmospheric halo */}
+
       <div
         style={{
           position: "absolute",
@@ -68,7 +68,7 @@ export function MiniGlobeBackdrop({ size = 480, opacity = 0.16, style }: Props) 
         }}
       />
 
-      {/* Globe sphere */}
+
       <div
         style={{
           position: "absolute",
@@ -84,7 +84,7 @@ export function MiniGlobeBackdrop({ size = 480, opacity = 0.16, style }: Props) 
           overflow: "hidden",
         }}
       >
-        {/* Rotating wireframe grid */}
+
         <svg
           width={size}
           height={size}
@@ -107,20 +107,20 @@ export function MiniGlobeBackdrop({ size = 480, opacity = 0.16, style }: Props) 
             strokeWidth="0.75"
             fill="none"
           >
-            {/* Latitude lines */}
+
             {lats.map(({ cy, rx, ry }, i) => (
               <ellipse key={i} cx={r} cy={cy} rx={rx} ry={ry} />
             ))}
-            {/* Central meridian as vertical segment */}
+
             <line x1={r} y1={r - r * 0.995} x2={r} y2={r + r * 0.995} />
-            {/* Meridians at varying longitudes */}
+
             {meridians.map(({ rx, ry }, i) => (
               <ellipse key={i} cx={r} cy={r} rx={rx} ry={ry} />
             ))}
           </g>
         </svg>
 
-        {/* Specular highlight — upper-left catch-light */}
+
         <div
           style={{
             position: "absolute",
@@ -135,7 +135,7 @@ export function MiniGlobeBackdrop({ size = 480, opacity = 0.16, style }: Props) 
           }}
         />
 
-        {/* Rim light — subtle bright edge */}
+
         <div
           style={{
             position: "absolute",

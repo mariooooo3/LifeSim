@@ -5,8 +5,8 @@ import worldAtlas from "world-atlas/countries-110m.json";
 type AnyTopology = Parameters<typeof feature>[0];
 type AnyObject   = Parameters<typeof feature>[1];
 
-// ---------------------------------------------------------------------------
-// Public types
+
+
 
 export interface GlobePin {
   id: string;
@@ -23,8 +23,8 @@ interface Props {
   size?: number;
 }
 
-// ---------------------------------------------------------------------------
-// Solar position
+
+
 
 function getSolarPosition(date: Date): { lat: number; lng: number } {
   const dayOfYear = Math.floor(
@@ -45,8 +45,8 @@ function solarCosine(cityLat: number, cityLng: number, sunLat: number, sunLng: n
   );
 }
 
-// ---------------------------------------------------------------------------
-// Geometry
+
+
 
 function project(lat: number, lng: number, lat0: number, lng0: number, r: number) {
   const φ  = (lat  * Math.PI) / 180;
@@ -75,8 +75,8 @@ function projectRing(ring: [number, number][], lat0: number, lng0: number, r: nu
   return d ? d + "Z" : "";
 }
 
-// ---------------------------------------------------------------------------
-// World topology
+
+
 
 const _land = feature(
   worldAtlas as unknown as AnyTopology,
@@ -90,8 +90,8 @@ if (_land.type === "Feature") {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Population tiers
+
+
 
 const MEGA_CITIES = new Set([
   "c-tokyo", "c-delhi", "c-shanghai", "c-mumbai", "c-beijing",
@@ -116,28 +116,28 @@ const MAJOR_CITIES = new Set([
   "c-baghdad", "c-khartoum", "c-daressalaam", "c-luanda",
 ]);
 
-// ---------------------------------------------------------------------------
-// Approximate cloud systems — geographic centers of persistent cloud bands.
-// Rendered as blurred white circles to suggest atmospheric texture.
+
+
+
 
 const CLOUD_BANDS: { lat: number; lng: number; r: number; op: number }[] = [
-  // Intertropical Convergence Zone
-  { lat:  4, lng:   0,  r: 88, op: 0.85 },  // Atlantic ITCZ
-  { lat: -3, lng: 145,  r: 82, op: 0.75 },  // West Pacific warm pool
-  { lat:  8, lng:  75,  r: 78, op: 0.70 },  // Indian Ocean
-  { lat:  5, lng: -60,  r: 72, op: 0.65 },  // Caribbean
-  // Mid-latitude frontal systems
-  { lat: 50, lng: -22,  r: 76, op: 0.65 },  // North Atlantic front
-  { lat: 48, lng: 105,  r: 65, op: 0.55 },  // Siberian frontal zone
-  { lat: 58, lng:-145,  r: 68, op: 0.60 },  // North Pacific cyclones
-  // Southern hemisphere roaring forties
-  { lat:-42, lng:  -8,  r: 90, op: 0.80 },  // Southern Ocean Atlantic
-  { lat:-40, lng: 140,  r: 85, op: 0.75 },  // Southern Ocean Pacific
-  { lat:-35, lng:  70,  r: 78, op: 0.65 },  // Southern Ocean Indian
+
+  { lat:  4, lng:   0,  r: 88, op: 0.85 },  
+  { lat: -3, lng: 145,  r: 82, op: 0.75 },  
+  { lat:  8, lng:  75,  r: 78, op: 0.70 },  
+  { lat:  5, lng: -60,  r: 72, op: 0.65 },  
+
+  { lat: 50, lng: -22,  r: 76, op: 0.65 },  
+  { lat: 48, lng: 105,  r: 65, op: 0.55 },  
+  { lat: 58, lng:-145,  r: 68, op: 0.60 },  
+
+  { lat:-42, lng:  -8,  r: 90, op: 0.80 },  
+  { lat:-40, lng: 140,  r: 85, op: 0.75 },  
+  { lat:-35, lng:  70,  r: 78, op: 0.65 },  
 ];
 
-// ---------------------------------------------------------------------------
-// Drag state
+
+
 
 interface DragState {
   startX: number; startY: number;
@@ -145,8 +145,8 @@ interface DragState {
   lastLat: number; lastLng: number;
 }
 
-// ---------------------------------------------------------------------------
-// Component
+
+
 
 export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -155,28 +155,28 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
   const cx = size / 2;
   const cy = size / 2;
 
-  // Camera
+
   const camRef  = useRef({ lat: 20, lng: 10 });
   const velRef  = useRef({ lat: 0, lng: 0 });
   const dragRef = useRef<DragState | null>(null);
   const [cam, setCam]             = useState({ lat: 20, lng: 10 });
   const [isDragging, setIsDragging] = useState(false);
 
-  // Camera target
+
   const selected  = pins.find((p) => p.id === selectedId);
   const targetRef = useRef({ lat: (selected?.lat ?? 20) * 0.5, lng: selected?.lng ?? 10 });
   useEffect(() => {
     if (selected) targetRef.current = { lat: selected.lat * 0.5, lng: selected.lng };
-  }, [selectedId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedId]); 
 
-  // Solar clock
+
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(t);
   }, []);
 
-  // Activity pulses
+
   const [pulseIds, setPulseIds] = useState<ReadonlySet<string>>(() => new Set());
   useEffect(() => {
     const cycle = () => {
@@ -191,10 +191,10 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
     cycle();
     const t = setInterval(cycle, 4_000);
     return () => clearInterval(t);
-  }, [pins.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pins.length]); 
 
-  // ---------------------------------------------------------------------------
-  // RAF loop
+
+
 
   useEffect(() => {
     let raf: number;
@@ -225,8 +225,8 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  // ---------------------------------------------------------------------------
-  // Pointer interaction
+
+
 
   const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     svgRef.current?.setPointerCapture(e.pointerId);
@@ -258,8 +258,8 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
     setIsDragging(false);
   };
 
-  // ---------------------------------------------------------------------------
-  // Render data
+
+
 
   const landPaths = useMemo(
     () => LAND_RINGS.map((ring) => projectRing(ring, cam.lat, cam.lng, r, cx, cy)),
@@ -275,7 +275,7 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
     return pts.join(" ");
   }, [cam.lat, cam.lng, r, cx, cy]);
 
-  // Solar geometry
+
   const solarPos = useMemo(() => getSolarPosition(now), [now]);
 
   const sunP  = project(solarPos.lat, solarPos.lng, cam.lat, cam.lng, r);
@@ -287,15 +287,15 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
   const nightCX = cx + antiP.x;
   const nightCY = cy - antiP.y;
 
-  // Terminator midpoint — where twilight glow is centered
+
   const twilightCX = (sunSX + nightCX) / 2;
   const twilightCY = (sunSY + nightCY) / 2;
 
-  // Sun position as % of size for CSS gradient
+
   const sunPctX = Math.round((sunSX / size) * 100);
   const sunPctY = Math.round((sunSY / size) * 100);
 
-  // Cloud screen positions
+
   const cloudPts = useMemo(
     () =>
       CLOUD_BANDS.map((c) => {
@@ -306,15 +306,15 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
     [cam.lat, cam.lng, r, cx, cy],
   );
 
-  // ---------------------------------------------------------------------------
-  // JSX
+
+
 
   return (
     <div className="relative select-none" style={{ width: size, height: size }}>
 
-      {/* ── Atmosphere layers (CSS — outside the SVG sphere) ─────────────── */}
 
-      {/* Layer 1: broad diffuse blue halo */}
+
+
       <div
         className="absolute rounded-full pointer-events-none"
         style={{
@@ -325,7 +325,7 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
         aria-hidden
       />
 
-      {/* Layer 2: tighter blue-white atmospheric rim */}
+
       <div
         className="absolute rounded-full pointer-events-none"
         style={{
@@ -335,7 +335,7 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
         aria-hidden
       />
 
-      {/* Layer 3: sun-side warm atmospheric scatter — shifts with solar position */}
+
       <div
         className="absolute rounded-full pointer-events-none"
         style={{
@@ -346,7 +346,7 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
         aria-hidden
       />
 
-      {/* Layer 4: anti-solar side — deep space blue */}
+
       <div
         className="absolute rounded-full pointer-events-none"
         style={{
@@ -357,7 +357,7 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
         aria-hidden
       />
 
-      {/* ── Globe SVG ─────────────────────────────────────────────────────── */}
+
 
       <svg
         ref={svgRef}
@@ -372,7 +372,7 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
       >
         <defs>
 
-          {/* Ocean — vivid deep blue, lit from sun position */}
+
           <radialGradient id="eg-ocean" cx="35%" cy="28%" r="80%">
             <stop offset="0%"   stopColor="oklch(0.62 0.22 210)" />
             <stop offset="30%"  stopColor="oklch(0.42 0.18 226)" />
@@ -380,14 +380,14 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
             <stop offset="100%" stopColor="oklch(0.14 0.06 250)" />
           </radialGradient>
 
-          {/* Land — sun-side radial shading */}
+
           <radialGradient id="eg-land-shade" cx="35%" cy="28%" r="75%">
             <stop offset="0%"   stopColor="oklch(0.68 0.12 130 / 0.55)" />
             <stop offset="55%"  stopColor="oklch(0.50 0.11 128 / 0.00)" />
             <stop offset="100%" stopColor="oklch(0.28 0.05 120 / 0.22)" />
           </radialGradient>
 
-          {/* Land — latitude tint: warm tropics, cool poles */}
+
           <linearGradient id="eg-land-lat" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%"   stopColor="oklch(0.62 0.04 200 / 0.28)" />
             <stop offset="28%"  stopColor="oklch(0.58 0.10 140 / 0.12)" />
@@ -396,7 +396,7 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
             <stop offset="100%" stopColor="oklch(0.62 0.04 200 / 0.28)" />
           </linearGradient>
 
-          {/* Specular — follows actual sun position */}
+
           <radialGradient id="eg-specular" gradientUnits="userSpaceOnUse"
             cx={sunSX} cy={sunSY} r={r * 0.78}>
             <stop offset="0%"   stopColor="oklch(1 0.02 215 / 0.28)" />
@@ -404,7 +404,7 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
             <stop offset="100%" stopColor="rgba(0,0,0,0)" />
           </radialGradient>
 
-          {/* Twilight — warm orange glow at the terminator line */}
+
           <radialGradient id="eg-twilight" gradientUnits="userSpaceOnUse"
             cx={twilightCX} cy={twilightCY} r={r * 1.15}>
             <stop offset="0%"   stopColor="oklch(0.72 0.22 48 / 0.34)" />
@@ -413,7 +413,7 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
             <stop offset="100%" stopColor="rgba(0,0,0,0)" />
           </radialGradient>
 
-          {/* Night overlay — centered on anti-solar point */}
+
           <radialGradient id="eg-night" gradientUnits="userSpaceOnUse"
             cx={nightCX} cy={nightCY} r={r * 1.48}>
             <stop offset="0%"   stopColor="oklch(0.05 0.05 252 / 0.84)" />
@@ -422,14 +422,14 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
             <stop offset="100%" stopColor="rgba(0,0,0,0)" />
           </radialGradient>
 
-          {/* Limb darkening */}
+
           <radialGradient id="eg-limb" cx="50%" cy="50%" r="50%">
             <stop offset="68%"  stopColor="rgba(0,0,0,0)" />
             <stop offset="91%"  stopColor="rgba(0,0,0,0.52)" />
             <stop offset="100%" stopColor="rgba(0,0,0,0.74)" />
           </radialGradient>
 
-          {/* Atmospheric scattering rim — the signature thin blue halo */}
+
           <radialGradient id="eg-atmos-rim" cx="50%" cy="50%" r="50%">
             <stop offset="79%"  stopColor="rgba(0,0,0,0)" />
             <stop offset="87%"  stopColor="oklch(0.78 0.30 218 / 0.55)" />
@@ -437,41 +437,41 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
             <stop offset="100%" stopColor="rgba(0,0,0,0)" />
           </radialGradient>
 
-          {/* Cloud blur — feGaussianBlur softens the white circles into cloud shapes */}
+
           <filter id="eg-cloud-blur" x="-60%" y="-60%" width="220%" height="220%">
             <feGaussianBlur stdDeviation="22" />
           </filter>
 
-          {/* Sphere clip */}
+
           <clipPath id="eg-clip">
             <circle cx={cx} cy={cy} r={r} />
           </clipPath>
 
         </defs>
 
-        {/* Ocean sphere */}
+
         <circle cx={cx} cy={cy} r={r} fill="url(#eg-ocean)" />
 
-        {/* Land masses */}
+
         <g clipPath="url(#eg-clip)">
           {landPaths.map((d, i) =>
             d ? <path key={i} d={d} fill="oklch(0.50 0.13 128)" /> : null,
           )}
-          {/* Sun-side shading */}
+
           <rect x={0} y={0} width={size} height={size}
             fill="url(#eg-land-shade)" style={{ mixBlendMode: "overlay" }} />
-          {/* Latitude tint: tropical warm, polar cool */}
+
           <rect x={0} y={0} width={size} height={size}
             fill="url(#eg-land-lat)" style={{ mixBlendMode: "overlay" }} />
         </g>
 
-        {/* Equator */}
+
         {equatorPts && (
           <polyline clipPath="url(#eg-clip)" points={equatorPts}
             fill="none" stroke="oklch(0.82 0.08 220 / 0.14)" strokeWidth={0.65} />
         )}
 
-        {/* Cloud layer — blurred white circles for atmospheric texture */}
+
         {cloudPts.length > 0 && (
           <g clipPath="url(#eg-clip)" filter="url(#eg-cloud-blur)">
             {cloudPts.map((c, i) => (
@@ -483,18 +483,18 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
           </g>
         )}
 
-        {/* Specular highlight — sun-side brightening */}
+
         <circle cx={cx} cy={cy} r={r} fill="url(#eg-specular)" pointerEvents="none" />
 
-        {/* Night overlay */}
+
         <circle cx={cx} cy={cy} r={r} fill="url(#eg-night)"
           clipPath="url(#eg-clip)" pointerEvents="none" />
 
-        {/* Terminator glow — warm orange at the dawn/dusk boundary */}
+
         <circle cx={cx} cy={cy} r={r} fill="url(#eg-twilight)"
           clipPath="url(#eg-clip)" pointerEvents="none" />
 
-        {/* City pins */}
+
         {pins.map((pin) => {
           const p = project(pin.lat, pin.lng, cam.lat, cam.lng, r);
           if (!p.visible) return null;
@@ -564,7 +564,7 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
             );
           }
 
-          // Normal
+
           const dotR = isMega ? 3.8 : isMajor ? 2.8 : 2.4;
           return (
             <g key={pin.id} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`}
@@ -583,10 +583,10 @@ export function EarthGlobe({ pins, selectedId, onSelect, size = 420 }: Props) {
           );
         })}
 
-        {/* Atmospheric scattering rim — the blue halo visible on Earth from space */}
+
         <circle cx={cx} cy={cy} r={r} fill="url(#eg-atmos-rim)" pointerEvents="none" />
 
-        {/* Limb darkening — space is dark */}
+
         <circle cx={cx} cy={cy} r={r} fill="url(#eg-limb)" pointerEvents="none" />
 
       </svg>

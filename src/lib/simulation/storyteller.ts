@@ -3,16 +3,16 @@ import type { WorldEffects } from "./tick";
 import type { WorldSeed } from "./worldSeed";
 import { createSeededRng, type Rng } from "./randomness";
 
-// ---------------------------------------------------------------------------
-// Storyteller — generates the macro world-event arc for a run.
-//
-// Instead of a fixed day-indexed cycle, each run derives a *seeded, weighted*
-// schedule from its WorldSeed.  Two things drive the outcome:
-//   1. world.seed   — varies per run, so the arc is different every time.
-//   2. city profile — economicPressure / socialIntensity / etc. tilt which
-//      kinds of events are likely, so each city has a distinct narrative feel.
-// The schedule is built once (at initWorld) and is fully deterministic for a
-// given seed, which keeps replay/debug reproducible.
+
+
+
+
+
+
+
+
+
+
 
 export type EventCategory = "economic" | "weather" | "social" | "civic";
 
@@ -30,7 +30,7 @@ export interface WorldEvent {
   category: EventCategory;
   pressureDelta: number;
   feedText: string;
-  npcEffects?: WorldEffects; // immediate effects applied to all NPCs this tick
+  npcEffects?: WorldEffects; 
 }
 
 interface WorldEventDef {
@@ -40,17 +40,17 @@ interface WorldEventDef {
   feedText: string;
   npcEffects?: WorldEffects;
   baseWeight: number;
-  // Each affinity multiplies the weight by (1 + mult * world[param]).
-  // world params are 0-1, so a mult of 3 can quadruple an event's odds in a
-  // city where that parameter maxes out — strong, visible city identity.
+
+
+
   affinities?: Partial<Record<WorldParamKey, number>>;
 }
 
-// ---------------------------------------------------------------------------
-// Event pool — ~28 events across four categories.
+
+
 
 const EVENT_DEFS: WorldEventDef[] = [
-  // ---- economic ----------------------------------------------------------
+
   {
     title: "Rent increase",
     category: "economic",
@@ -124,8 +124,8 @@ const EVENT_DEFS: WorldEventDef[] = [
     affinities: { opportunityDensity: 2.5, workCulture: 1.0 },
   },
 
-  // ---- weather ------------------------------------------------------------
-  // Weather has weak affinities — it's the neutral, always-plausible backbone.
+
+
   {
     title: "Cold snap",
     category: "weather",
@@ -176,7 +176,7 @@ const EVENT_DEFS: WorldEventDef[] = [
     baseWeight: 3,
   },
 
-  // ---- social -------------------------------------------------------------
+
   {
     title: "Local festival",
     category: "social",
@@ -241,7 +241,7 @@ const EVENT_DEFS: WorldEventDef[] = [
     affinities: { socialIntensity: 2.5 },
   },
 
-  // ---- civic --------------------------------------------------------------
+
   {
     title: "Transit strike",
     category: "civic",
@@ -315,8 +315,8 @@ const EVENT_DEFS: WorldEventDef[] = [
   },
 ];
 
-// ---------------------------------------------------------------------------
-// Weighted selection helpers
+
+
 
 function effectiveWeight(e: WorldEventDef, world: WorldSeed): number {
   let w = e.baseWeight;
@@ -339,8 +339,8 @@ function weightedPick<T>(items: Array<[T, number]>, rng: Rng): T {
   return items[items.length - 1][0];
 }
 
-// ---------------------------------------------------------------------------
-// Schedule builder — call once per run (at initWorld).
+
+
 
 export function buildWorldEventSchedule(world: WorldSeed, days: number): WorldEvent[] {
   const rng = createSeededRng((world.seed ^ 0x57_01_4e_5d) >>> 0);
@@ -349,13 +349,13 @@ export function buildWorldEventSchedule(world: WorldSeed, days: number): WorldEv
   const usedTitles = new Set<string>();
 
   for (let day = 1; day <= days; day++) {
-    // No repeated titles within the run, and no two same-category days in a
-    // row, so the week feels varied. (Pool is large enough that the title
-    // exclusion never empties the candidate list for a 7-day run.)
+
+
+
     let candidates = EVENT_DEFS.filter(
       (e) => e.category !== lastCategory && !usedTitles.has(e.title),
     );
-    // Safety net: if filters somehow exhaust the pool, drop the title rule.
+
     if (candidates.length === 0) {
       candidates = EVENT_DEFS.filter((e) => e.category !== lastCategory);
     }
@@ -379,7 +379,7 @@ export function buildWorldEventSchedule(world: WorldSeed, days: number): WorldEv
   return schedule;
 }
 
-// Safe lookup into a prebuilt schedule (1-based day).
+
 export function eventForDay(schedule: WorldEvent[], day: number): WorldEvent | null {
   if (day < 1 || day > schedule.length) return null;
   return schedule[day - 1];
@@ -389,8 +389,8 @@ export function clampPressure(p: number): number {
   return Math.max(0.05, Math.min(0.90, p));
 }
 
-// ---------------------------------------------------------------------------
-// Mid-day flavour hints — seeded variety instead of two fixed strings.
+
+
 
 const MIDDAY_HINTS = [
   "Midweek pressure building across the city.",

@@ -31,7 +31,7 @@ export function EndSummaryOverlay({
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-background/95 backdrop-blur-md">
-      {/* Header */}
+
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-foreground/10 bg-background/90 px-6 py-4 backdrop-blur-sm">
         <div>
           <div className="label">Week complete</div>
@@ -59,7 +59,7 @@ export function EndSummaryOverlay({
       </div>
 
       <div className="mx-auto w-full max-w-4xl space-y-8 px-6 py-8">
-        {/* Player summary */}
+
         {player && playerState && (
           <div>
             <SectionLabel>Your week</SectionLabel>
@@ -98,7 +98,7 @@ export function EndSummaryOverlay({
           </div>
         )}
 
-        {/* NPC summaries */}
+
         <div>
           <SectionLabel>The city's people</SectionLabel>
           <div className="grid gap-3 sm:grid-cols-2">

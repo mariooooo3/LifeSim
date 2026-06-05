@@ -80,7 +80,7 @@ function tryAcceptOpportunity(
   if (!aligned) return { npc, event: null };
   if (!chance(0.20, rng)) return { npc, event: null };
 
-  // Accept it
+
   const resolvedOpp: Opportunity = { ...opp, accepted: true, resolved: true };
   const moneyGain = opp.reward;
 
@@ -258,7 +258,7 @@ export function simulateTick(input: TickInput): TickOutput {
     }
 
     if (consequences.isolation) {
-      // Social need drops and relationships cool off
+
       const degradedRels: Record<string, Relationship> = {};
       for (const [id, rel] of Object.entries(n.relationships)) {
         degradedRels[id] = { ...rel, affinity: clampStat(rel.affinity - 4) };
@@ -274,7 +274,7 @@ export function simulateTick(input: TickInput): TickOutput {
     }
 
     if (consequences.emotionalWithdrawal) {
-      // Fun and social tank; relationships take a trust hit
+
       const withdrawnRels: Record<string, Relationship> = {};
       for (const [id, rel] of Object.entries(n.relationships)) {
         withdrawnRels[id] = { ...rel, trust: clampStat(rel.trust - 5) };

@@ -19,7 +19,7 @@ export interface EventInput {
   worldModifier?: string;
   stressSpike?: boolean;
   opportunityTitle?: string;
-  // Consequence-specific flags — each produces distinct feed text
+
   burnout?: boolean;
   sickness?: boolean;
   isolation?: boolean;
@@ -61,7 +61,7 @@ export function buildEvent(input: EventInput): SimEvent {
   if (input.opportunityTitle)
     return stamp(input, { kind: "work", text: `${input.name} has a new opportunity: ${input.opportunityTitle}` });
 
-  // Legacy generic stress spike (kept for backward compat)
+
   if (input.stressSpike)
     return stamp(input, { kind: "mood", text: `${input.name}'s stress spiked` });
 

@@ -1,8 +1,8 @@
 import type { WorldSeed } from "../worldSeed";
 
-// ---------------------------------------------------------------------------
-// Cultural regions — every city maps to one of these 16 archetypes.
-// Traits are 0-1 continuous dimensions; no single city perfectly embodies one.
+
+
+
 
 export type CultureRegion =
   | "japan"
@@ -31,19 +31,19 @@ export type CulturalTilt =
   | "isolation";
 
 export interface CulturalTraits {
-  ambition: number;          // drive to advance / succeed
-  nightlife: number;         // evening / night social activity
-  loneliness: number;        // baseline isolation in this culture
-  romance: number;           // relationship & romantic energy
-  creativity: number;        // artistic / expressive output
-  wealthPressure: number;    // financial status anxiety
-  socialOpenness: number;    // ease of forming new connections
-  pace: number;              // speed of daily life
-  workIntensity: number;     // hours, dedication, work centrality
-  artisticEnergy: number;    // scene vitality, creative culture
-  survivalPressure: number;  // existential economic stress
-  luxuryLifestyle: number;   // high-end consumption / status display
-  socialMobility: number;    // perceived ability to move up
+  ambition: number;          
+  nightlife: number;         
+  loneliness: number;        
+  romance: number;           
+  creativity: number;        
+  wealthPressure: number;    
+  socialOpenness: number;    
+  pace: number;              
+  workIntensity: number;     
+  artisticEnergy: number;    
+  survivalPressure: number;  
+  luxuryLifestyle: number;   
+  socialMobility: number;    
 }
 
 export interface WorldCulture {
@@ -52,8 +52,8 @@ export interface WorldCulture {
   traits: CulturalTraits;
 }
 
-// ---------------------------------------------------------------------------
-// Base trait profiles per region (not per city — cities are variations)
+
+
 
 const BASE_TRAITS: Record<CultureRegion, CulturalTraits> = {
   japan: {
@@ -154,40 +154,40 @@ const BASE_TRAITS: Record<CultureRegion, CulturalTraits> = {
   },
 };
 
-// ---------------------------------------------------------------------------
-// City ID → cultural region (explicit mapping for all known cities)
+
+
 
 const CITY_REGION: Record<string, CultureRegion> = {
-  // Japan
+
   "c-tokyo": "japan", "c-osaka": "japan", "c-kyoto": "japan",
   "c-sapporo": "japan", "c-fukuoka": "japan",
 
-  // Korea
+
   "c-seoul": "korea", "c-busan": "korea", "c-pyongyang": "korea",
 
-  // China / Taiwan / HK / Mongolia
+
   "c-beijing": "china", "c-shanghai": "china", "c-guangzhou": "china",
   "c-hongkong": "china", "c-taipei": "china", "c-shenzhen": "china",
   "c-chengdu": "china", "c-wuhan": "china", "c-chongqing": "china",
   "c-xian": "china", "c-nanjing": "china", "c-tianjin": "china",
   "c-ulaanbaatar": "china",
 
-  // Nordic
+
   "c-stockholm": "nordic", "c-oslo": "nordic", "c-copenhagen": "nordic",
   "c-helsinki": "nordic", "c-reykjavik": "nordic",
 
-  // Germanic (Western/Central Europe)
+
   "c-berlin": "germanic", "c-hamburg": "germanic", "c-munich": "germanic",
   "c-vienna": "germanic", "c-zurich": "germanic", "c-amsterdam": "germanic",
   "c-brussels": "germanic", "c-prague": "germanic", "c-budapest": "germanic",
 
-  // Romance Europe (France, Italy, Iberia, Greece, Mediterranean)
+
   "c-paris": "romance_europe", "c-rome": "romance_europe", "c-milan": "romance_europe",
   "c-madrid": "romance_europe", "c-barcelona": "romance_europe",
   "c-lisbon": "romance_europe", "c-porto": "romance_europe",
   "c-athens": "romance_europe", "c-valletta": "romance_europe", "c-nicosia": "romance_europe",
 
-  // Eastern Europe (post-Soviet / Central-Eastern)
+
   "c-warsaw": "eastern_europe", "c-bucharest": "eastern_europe",
   "c-cluj": "eastern_europe", "c-iasi": "eastern_europe", "c-timisoara": "eastern_europe",
   "c-kyiv": "eastern_europe",
@@ -197,10 +197,10 @@ const CITY_REGION: Record<string, CultureRegion> = {
   "c-yerevan": "eastern_europe", "c-baku": "eastern_europe",
   "c-minsk": "slavic",
 
-  // Slavic (Russia)
+
   "c-moscow": "slavic", "c-stpetersburg": "slavic",
 
-  // Middle East (Levant / Turkey / Iran / Central Asia)
+
   "c-istanbul": "middle_east", "c-ankara": "middle_east",
   "c-tehran": "middle_east", "c-baghdad": "middle_east",
   "c-beirut": "middle_east", "c-amman": "middle_east",
@@ -211,12 +211,12 @@ const CITY_REGION: Record<string, CultureRegion> = {
   "c-tripoli": "middle_east", "c-rabat": "middle_east",
   "c-khartoum": "middle_east",
 
-  // Gulf
+
   "c-dubai": "gulf", "c-abudhabi": "gulf", "c-doha": "gulf",
   "c-riyadh": "gulf", "c-jeddah": "gulf", "c-muscat": "gulf",
   "c-kuwait": "gulf", "c-manama": "gulf",
 
-  // South Asian
+
   "c-mumbai": "south_asian", "c-delhi": "south_asian", "c-bangalore": "south_asian",
   "c-kolkata": "south_asian", "c-chennai": "south_asian", "c-pune": "south_asian",
   "c-hyderabad": "south_asian", "c-ahmedabad": "south_asian",
@@ -224,7 +224,7 @@ const CITY_REGION: Record<string, CultureRegion> = {
   "c-dhaka": "south_asian", "c-chittagong": "south_asian",
   "c-colombo": "south_asian", "c-kathmandu": "south_asian",
 
-  // Southeast Asian
+
   "c-singapore": "southeast_asian", "c-bangkok": "southeast_asian",
   "c-hcmc": "southeast_asian", "c-jakarta": "southeast_asian",
   "c-manila": "southeast_asian", "c-kualalumpur": "southeast_asian",
@@ -234,7 +234,7 @@ const CITY_REGION: Record<string, CultureRegion> = {
   "c-danang": "southeast_asian", "c-vientiane": "southeast_asian",
   "c-bandarwon": "southeast_asian", "c-dili": "southeast_asian",
 
-  // Sub-Saharan Africa
+
   "c-lagos": "africa", "c-nairobi": "africa", "c-accra": "africa",
   "c-addisababa": "africa", "c-dakar": "africa", "c-abuja": "africa",
   "c-capetown": "africa", "c-johannesburg": "africa", "c-kinshasa": "africa",
@@ -244,7 +244,7 @@ const CITY_REGION: Record<string, CultureRegion> = {
   "c-conakry": "africa", "c-freetown": "africa", "c-monrovia": "africa",
   "c-antananarivo": "africa", "c-kigali": "africa", "c-bujumbura": "africa",
 
-  // Latin American
+
   "c-saopaulo": "latin_american", "c-rio": "latin_american",
   "c-buenosaires": "latin_american", "c-bogota": "latin_american",
   "c-lima": "latin_american", "c-santiago": "latin_american",
@@ -261,7 +261,7 @@ const CITY_REGION: Record<string, CultureRegion> = {
   "c-sanjose-cr": "latin_american", "c-guayaquil": "latin_american",
   "c-portoalegre": "latin_american",
 
-  // North American
+
   "c-newyork": "north_american", "c-losangeles": "north_american",
   "c-chicago": "north_american", "c-houston": "north_american",
   "c-phoenix": "north_american", "c-philadelphia": "north_american",
@@ -276,7 +276,7 @@ const CITY_REGION: Record<string, CultureRegion> = {
   "c-ottawa": "north_american", "c-edmonton": "north_american",
   "c-winnipeg": "north_american",
 
-  // Anglophone (UK, Ireland, ANZ)
+
   "c-london": "anglophone", "c-dublin": "anglophone",
   "c-edinburgh": "anglophone", "c-manchester": "anglophone",
   "c-birmingham": "anglophone", "c-glasgow": "anglophone",
@@ -286,43 +286,43 @@ const CITY_REGION: Record<string, CultureRegion> = {
   "c-auckland": "anglophone", "c-wellington": "anglophone",
 };
 
-// ---------------------------------------------------------------------------
-// Lat/lng fallback — called when cityId is not in the explicit map
+
+
 
 function regionFromCoords(lat: number, lng: number): CultureRegion {
-  // Japan
+
   if (lat >= 30 && lat <= 46 && lng >= 129 && lng <= 146) return "japan";
-  // Korea
+
   if (lat >= 33 && lat <= 39 && lng >= 124 && lng <= 130) return "korea";
-  // China / East Asia
+
   if (lat >= 18 && lat <= 55 && lng >= 73 && lng <= 135) return "china";
-  // Nordic
+
   if (lat >= 54 && lng >= -25 && lng <= 32) return "nordic";
-  // UK / Ireland / Anglophone Europe
+
   if (lat >= 49 && lat <= 60 && lng >= -11 && lng <= 2) return "anglophone";
-  // Western/Central Europe (Germanic)
+
   if (lat >= 45 && lat <= 56 && lng >= 2 && lng <= 20) return "germanic";
-  // Mediterranean / Romance Europe
+
   if (lat >= 35 && lat <= 50 && lng >= -10 && lng <= 22) return "romance_europe";
-  // Eastern Europe
+
   if (lat >= 44 && lat <= 56 && lng >= 20 && lng <= 42) return "eastern_europe";
-  // Russia/Slavic
+
   if (lat >= 50 && lng >= 28 && lng <= 180) return "slavic";
-  // Gulf
+
   if (lat >= 20 && lat <= 32 && lng >= 44 && lng <= 60) return "gulf";
-  // Middle East / North Africa
+
   if (lat >= 15 && lat <= 43 && lng >= -6 && lng <= 65) return "middle_east";
-  // South Asian
+
   if (lat >= 5 && lat <= 35 && lng >= 60 && lng <= 92) return "south_asian";
-  // Southeast Asian
+
   if (lat >= -10 && lat <= 28 && lng >= 92 && lng <= 130) return "southeast_asian";
-  // Sub-Saharan Africa
+
   if (lat >= -35 && lat <= 18 && lng >= -20 && lng <= 52) return "africa";
-  // Latin American
+
   if (lat >= -56 && lat <= 25 && lng >= -82 && lng <= -34) return "latin_american";
-  // North American
+
   if (lat >= 24 && lat <= 72 && lng >= -170 && lng <= -52) return "north_american";
-  // Australia / NZ
+
   if (lat <= -10 && lng >= 110) return "anglophone";
   return "anglophone";
 }
@@ -331,8 +331,8 @@ export function getCultureRegion(cityId: string, lat = 0, lng = 0): CultureRegio
   return CITY_REGION[cityId] ?? regionFromCoords(lat, lng);
 }
 
-// ---------------------------------------------------------------------------
-// Seed tilt — deterministic per world seed, independent of city choice
+
+
 
 function seedChannel(base: number, offset: number): number {
   return ((base * (offset | 1)) >>> 0) / 0xffffffff;
@@ -345,10 +345,10 @@ function deriveTilt(seed: number): CulturalTilt {
   if (v < 0.32) return "isolation";
   if (v < 0.48) return "renaissance";
   if (v < 0.65) return "boom";
-  return "default"; // most common
+  return "default"; 
 }
 
-// Tilt deltas applied on top of base traits (clamped to 0-1)
+
 const TILT_DELTA: Record<CulturalTilt, Partial<CulturalTraits>> = {
   default:     {},
   boom:        { ambition: +0.12, socialOpenness: +0.10, pace: +0.08, luxuryLifestyle: +0.15, survivalPressure: -0.14 },
@@ -378,16 +378,16 @@ function applyTilt(base: CulturalTraits, tilt: CulturalTilt): CulturalTraits {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Per-city trait deltas — applied after the regional base + tilt so each city
-// has a recognisable personality within its broader cultural region.
+
+
+
 
 const CITY_TRAIT_DELTA: Record<string, Partial<CulturalTraits>> = {
-  // ------------------------------------------------------------------
-  // Romania
-  // ------------------------------------------------------------------
 
-  // Bucharest: capital-city hunger, vibrant nightlife, economic disparity
+
+
+
+
   "c-bucharest": {
     ambition:         +0.10,
     nightlife:        +0.12,
@@ -397,7 +397,7 @@ const CITY_TRAIT_DELTA: Record<string, Partial<CulturalTraits>> = {
     socialMobility:   +0.05,
   },
 
-  // Cluj-Napoca: tech boom, student city, TIFF festival, arts scene
+
   "c-cluj": {
     creativity:       +0.15,
     artisticEnergy:   +0.14,
@@ -407,7 +407,7 @@ const CITY_TRAIT_DELTA: Record<string, Partial<CulturalTraits>> = {
     wealthPressure:   -0.08,
   },
 
-  // Iași: oldest university, academic rhythm, tighter economy
+
   "c-iasi": {
     artisticEnergy:   +0.10,
     creativity:       +0.08,
@@ -418,7 +418,7 @@ const CITY_TRAIT_DELTA: Record<string, Partial<CulturalTraits>> = {
     socialMobility:   -0.05,
   },
 
-  // Timișoara: European Capital of Culture 2023, multicultural, Western-adjacent
+
   "c-timisoara": {
     socialOpenness:   +0.14,
     romance:          +0.10,
@@ -450,13 +450,13 @@ function applyCityDelta(traits: CulturalTraits, cityId: string): CulturalTraits 
   };
 }
 
-// ---------------------------------------------------------------------------
-// Main export — derive a WorldCulture from a WorldSeed
+
+
 
 export function deriveCulture(world: WorldSeed): WorldCulture {
   const region = getCultureRegion(world.regionId, world.lat, world.lng);
   const tilt   = deriveTilt(world.seed);
-  // Layer order: base → tilt (run-specific mood) → city delta (fixed identity)
+
   const afterTilt  = applyTilt(BASE_TRAITS[region], tilt);
   const traits     = applyCityDelta(afterTilt, world.regionId);
   return { region, tilt, traits };

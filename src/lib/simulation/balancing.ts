@@ -1,7 +1,7 @@
 export const STAT_MIN = 0;
 export const STAT_MAX = 100;
 
-export const INERTIA_BONUS = 6;   // was 10 — reduced so NPCs don't lock into one action
+export const INERTIA_BONUS = 6;   
 export const SCORE_RANDOM_MIN = -5;
 export const SCORE_RANDOM_MAX = 5;
 
@@ -14,7 +14,7 @@ export const NEED_DECAY_PER_TICK = {
 
 export const ACTION_IMPACT = {
   sleep:     { money: -0.1, energy: 26, social: -0.5, fun: 3,  stress: -18 },
-  work:      { money: 12,   energy: -14, social: -3,   fun: -5, stress: 8  }, // stress was 12, energy cost was -16
+  work:      { money: 12,   energy: -14, social: -3,   fun: -5, stress: 8  }, 
   eat:       { money: -3,   energy: 9,   social: 1,    fun: 4,  stress: -5  },
   socialize: { money: -2,   energy: -5,  social: 20,   fun: 12, stress: -10 },
   relax:     { money: -1,   energy: 7,   social: 3,    fun: 15, stress: -14 },

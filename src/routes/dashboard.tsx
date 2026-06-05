@@ -143,7 +143,7 @@ function Dashboard() {
       />
 
       <main className="mx-auto grid max-w-[1600px] gap-6 px-6 py-6 lg:grid-cols-[220px_1fr_340px]">
-        {/* Left column — player card */}
+
         <aside className="space-y-4 lg:sticky lg:top-[76px] lg:self-start">
           {player
             ? <PlayerCard player={player} state={playerState} onClick={() => setPlayerPanelOpen(true)} />
@@ -177,6 +177,7 @@ function Dashboard() {
                 isDimmed={filter === "all" ? undefined : (npc) => !matchesFilter(npc)}
                 player={player}
                 playerState={playerState}
+                speed={speed}
               />
 
               {!isRunning && !hasStarted && (
@@ -227,10 +228,13 @@ function Dashboard() {
                 <button
                   onClick={handleSkipToEnd}
                   disabled={runEnded || isSkipping}
-                  className="rounded-full px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
+                  className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
                   title="Skip to end of week"
                 >
-                  ⏭ End
+                  <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden>
+                    <path d="M3 3.5v9l6-4.5-6-4.5zM11 3v10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="currentColor" fillOpacity="0.12" />
+                  </svg>
+                  End
                 </button>
               </div>
             </div>

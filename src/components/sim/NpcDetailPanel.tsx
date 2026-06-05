@@ -25,7 +25,7 @@ interface Props {
 }
 
 export function NpcDetailPanel({ npc, allNpcs = [], day = 1, onClose }: Props) {
-  // --- Narration from store (situation-bucket cache) ---
+
   const phaseIndex        = useLifeSimStore((s) => s.phaseIndex);
   const narrationBuckets  = useLifeSimStore((s) => s.narrationBuckets);
   const pendingKeys        = useLifeSimStore((s) => s.pendingKeys);
@@ -34,12 +34,12 @@ export function NpcDetailPanel({ npc, allNpcs = [], day = 1, onClose }: Props) {
   const phase          = DAY_PHASES[phaseIndex] as DayPhase;
   const sitKey         = npc ? situationKey(npc, phase) : null;
   const variants       = sitKey ? narrationBuckets[sitKey] : undefined;
-  // Same situation → pool of phrasings; this NPC stably picks one by id hash.
+
   const narrationText  = variants && npc ? pickVariant(variants, npc.id) : undefined;
   const isPhasePending = sitKey ? pendingKeys.includes(sitKey) : false;
 
-  // Opening a panel narrates the whole cast in one batched call (everyone gets
-  // a story from the first click); cached situations cost nothing.
+
+
   useEffect(() => {
     if (!npc) return;
     if (!narrationText && !isPhasePending) {
@@ -47,7 +47,7 @@ export function NpcDetailPanel({ npc, allNpcs = [], day = 1, onClose }: Props) {
     }
   }, [npc, narrationText, isPhasePending, narrateCurrentCast]);
 
-  // --- Keyboard close ---
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -60,7 +60,7 @@ export function NpcDetailPanel({ npc, allNpcs = [], day = 1, onClose }: Props) {
   const moneyDisplay = Math.max(0, Math.min(100, Math.round((Math.max(0, npc.money) / 500) * 100)));
   const hasOpportunity = npc.activeOpportunity && !npc.activeOpportunity.resolved;
 
-  // Summarize relationships
+
   const relEntries = Object.entries(npc.relationships).slice(0, 3);
 
   return (
